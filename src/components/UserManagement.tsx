@@ -1,104 +1,148 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Button, Card } from '@mantine/core';
-
+import {
+  Container, Card, CardContent, Typography, Button, Grid, CircularProgress, Box, Snackbar, IconButton
+} from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import CloseIcon from '@mui/icons-material/Close';
 
 const UserManagement = () => {
-    const user: { id: number; username: string; email: string; role: string }[] = [];
-    const [users, setUsers] = useState(user);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const editUser = async (userId: number, updatedUser: { FullName: string; Email: string; Role: string; Password?: string }) => {
-        try {
-            const response = await axios.put(
-                `https://server-type-practicom.onrender.com/api/User/${userId}`,
-                updatedUser,
-                {
-                    headers: {
-                        'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
-                        'Content-Type': 'application/json'
-                    }
-                }
-            );
-            console.log('User updated successfully:', response.data);
-            fetchUsers(); // רענון רשימת המשתמשים אחרי העדכון
-        } catch (error: any) {
-            console.error('Failed to update user:', error.response?.data || error.message);
+  const [users, setUsers] = useState<{ id: number; username: string; email: string; role: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get('https://server-type-practicom.onrender.com/api/User/client', {
+        headers: {
+          'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      setUsers(response.data);
+      setLoading(false);
+    } catch (error) {
+      setError('שגיאה בעת שליפת המשתמשים');
+      setLoading(false);
+    }
+  };
+
+  const editUser = async (userId: number, updatedUser: { username: string; email: string; role: string }) => {
+    try {
+      await axios.put(
+        `https://server-type-practicom.onrender.com/api/User/${userId}`,
+        updatedUser,
+        {
+          headers: {
+            'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
+            'Content-Type': 'application/json',
+          },
         }
-    };
-    
-    const deleteUser = async (userId: number) => {
-        try {
-            await axios.delete(`https://server-type-practicom.onrender.com/api/User/${userId}`, {
-                headers: {
-                    'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-            console.log('User deleted successfully');
-            fetchUsers(); // רענון רשימת המשתמשים אחרי מחיקה
-        } catch (error) {
-            console.error('Failed to delete user:', error);
-        }
-    };
-    const viewFiles = (userId: number) => {
-        // פה את יכולה לנווט לעמוד אחר או להציג את הקבצים על המסך.
-        console.log('Viewing files for user:', userId);
-    };
-            
-    const fetchUsers = async () => {
-        try {
-            const response = await axios.get('https://server-type-practicom.onrender.com/api/User/client'
-                , {
-                    headers: {
-                        'Authorization': `Bearer ${sessionStorage.getItem('token')}`, // כאן חשוב שהטוקן שלך תקין
-                        'Content-Type': 'application/json'
-                    }
-            });
-            setUsers(response.data);
-            setLoading(false);
-        } catch (error) {
-            setError('Failed to fetch users');
-            setLoading(false);
-        }
-    };
+      );
+      fetchUsers();
+    } catch (error: any) {
+      console.error('שגיאה בעדכון:', error.response?.data || error.message);
+    }
+  };
 
-    useEffect(() => {
-        fetchUsers();
-    }, []);
+  const deleteUser = async (userId: number) => {
+    try {
+      await axios.delete(`https://server-type-practicom.onrender.com/api/User/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      fetchUsers();
+    } catch (error) {
+      console.error('שגיאה במחיקה:', error);
+    }
+  };
 
-    if (loading) return <div>Loading...</div>;
-    if (error) return <div>{error}</div>;
+  const viewFiles = (userId: number) => {
+    console.log('צפייה בקבצים של:', userId);
+  };
 
-    return (
-        <div className="p-6">
-            <h1 className="text-2xl font-bold mb-4">User Management</h1>
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
-            <div className="grid grid-cols-1 gap-4">
-                {users.map(user => (
-                    <Card key={user.id} className="rounded-2xl shadow p-4">
-                        {/* <CardContent> */}
-                            <div className="flex justify-between items-center">
-                                <div>
-                                    <p><strong>Name:</strong> {user.username}</p>
-                                    <p><strong>Email:</strong> {user.email}</p>
-                                    <p><strong>Role:</strong> {user.role}</p>
-                                </div>
-                                <div className="flex space-x-2">
-                                <div className="flex space-x-2">
-    <Button onClick={() => editUser(user.id, { username: user.username, email: user.email, role: user.role })}>Edit</Button>
-    <Button variant="destructive" onClick={() => deleteUser(user.id)}>Delete</Button>
-    <Button onClick={() => viewFiles(user.id)}>View Files</Button>
-</div>
+  return (
+    <Container maxWidth="md" sx={{ mt: 4 }}>
+      <Typography variant="h4" gutterBottom>
+        ניהול משתמשים
+      </Typography>
 
-                                </div>
-                            </div>
-                        {/* </CardContent> */}
-                    </Card>
-                ))}
-            </div>
-        </div>
-    );
+      {loading ? (
+        <Box display="flex" justifyContent="center" mt={4}>
+          <CircularProgress />
+        </Box>
+      ) : error ? (
+        <Snackbar
+          open={!!error}
+          message={error}
+          action={
+            <IconButton size="small" color="inherit" onClick={() => setError(null)}>
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          }
+        />
+      ) : (
+        <Grid container spacing={3}>
+          {users.map((user) => (
+            <Grid item xs={12} md={6} key={user.id}>
+              <Card elevation={3} sx={{ borderRadius: 4 }}>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>{user.username}</Typography>
+                  <Typography color="textSecondary" variant="body2">📧 {user.email}</Typography>
+                  <Typography variant="body2">🎯 תפקיד: {user.role}</Typography>
+
+                  <Box mt={2} display="flex" gap={1}>
+                    <Button
+                      size="small"
+                      startIcon={<EditIcon />}
+                      variant="outlined"
+                      onClick={() =>
+                        editUser(user.id, {
+                          username: user.username,
+                          email: user.email,
+                          role: user.role,
+                        })
+                      }
+                    >
+                      עריכה
+                    </Button>
+
+                    <Button
+                      size="small"
+                      color="error"
+                      variant="outlined"
+                      startIcon={<DeleteIcon />}
+                      onClick={() => deleteUser(user.id)}
+                    >
+                      מחיקה
+                    </Button>
+
+                    <Button
+                      size="small"
+                      color="primary"
+                      variant="outlined"
+                      startIcon={<VisibilityIcon />}
+                      onClick={() => viewFiles(user.id)}
+                    >
+                      קבצים
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
+    </Container>
+  );
 };
 
 export default UserManagement;

@@ -1,24 +1,30 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  SimpleGrid, 
-  Card, 
-  Text, 
-  Button, 
-  Group, 
-  Container, 
-  Title 
-} from "@mantine/core";
-import { 
-  IconFiles, 
-  IconUsers, 
-  IconChartBar, 
-  IconSettings, 
-  IconLogout, 
-  IconClipboardList 
-} from "@tabler/icons-react";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Container,
+  Grid,
+  Paper,
+  Card,
+  CardContent,
+  CardActionArea,
+  Box,
+  Button
+} from "@mui/material";
+import {
+  Folder as FolderIcon,
+  People as PeopleIcon,
+  BarChart as ReportsIcon,
+  Settings as SettingsIcon,
+  ListAlt as ActivityIcon,
+  Logout as LogoutIcon
+} from "@mui/icons-material";
 
-export default function Dashboard() {
+import { BarChart } from '@mui/x-charts/BarChart';
+
+const Dashboard = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -28,81 +34,103 @@ export default function Dashboard() {
 
   const dashboardItems = [
     {
-      icon: <IconFiles size={50} stroke={1.5} />,
+      icon: <FolderIcon sx={{ fontSize: 40, color: "#1976d2" }} />,
       title: "ניהול קבצים",
       description: "העלאה, הורדה וארגון קבצים",
-      route: "/files"
+      route: "/files",
     },
     {
-      icon: <IconUsers size={50} stroke={1.5} />,
-      title: "ניהול משתמשים", 
+      icon: <PeopleIcon sx={{ fontSize: 40, color: "#1976d2" }} />,
+      title: "ניהול משתמשים",
       description: "הוספה וניהול משתמשים",
-      route: "/users"
+      route: "/users",
     },
     {
-      icon: <IconChartBar size={50} stroke={1.5} />,
+      icon: <ReportsIcon sx={{ fontSize: 40, color: "#1976d2" }} />,
       title: "דוחות וסטטיסטיקות",
-      description: "מבט כללי על מדדי המערכת",
-      route: "/reports"
+      description: "סקירה גרפית של נתוני המערכת",
+      route: "/reports",
     },
     {
-      icon: <IconSettings size={50} stroke={1.5} />,
+      icon: <SettingsIcon sx={{ fontSize: 40, color: "#1976d2" }} />,
       title: "הגדרות מערכת",
-      description: "תצורה והגדרות כלליות",
-      route: "/settings"
+      description: "התאמה אישית והגדרות כלליות",
+      route: "/settings",
     },
     {
-      icon: <IconClipboardList size={50} stroke={1.5} />,
+      icon: <ActivityIcon sx={{ fontSize: 40, color: "#1976d2" }} />,
       title: "יומן פעילות",
       description: "מעקב אחר פעולות במערכת",
-      route: "/activity-log"
-    }
+      route: "/activity-log",
+    },
   ];
 
   return (
-    <Container size="lg">
-      <Group align="apart" mb={30}>
-        <Title>לוח בקרה</Title>
-        <Button 
-  color="red" 
-  leftIcon={<IconLogout size={16} />} 
-  onClick={handleLogout}
->
-  התנתקות
-</Button>
-      </Group>
+    <>
+      {/* Header קבוע */}
+      <AppBar position="static" sx={{ backgroundColor: "#1976d2" }}>
+        <Toolbar>
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+            מערכת ניהול הקלדות
+          </Typography>
+          <Button color="inherit" startIcon={<LogoutIcon />} onClick={handleLogout}>
+            התנתקות
+          </Button>
+        </Toolbar>
+      </AppBar>
 
-      <SimpleGrid 
-        cols={3} 
-        spacing="lg" 
-        breakpoints={[
-          { maxWidth: 'md', cols: 2 },
-          { maxWidth: 'xs', cols: 1 }
-        ]}
-      >
-        {dashboardItems.map((item) => (
-          <Card 
-            key={item.title} 
-            shadow="sm" 
-            p="lg" 
-            radius="md" 
-            withBorder
-            onClick={() => navigate(item.route)}
-            sx={{ cursor: 'pointer', transition: 'transform 0.2s' }}
-            _hover={{ transform: 'scale(1.03)' }}
-          >
-            <Group align="center" mb="xs">
-              {item.icon}
-            </Group>
-            <Text weight={500} align="center" size="lg" mb="xs">
-              {item.title}
-            </Text>
-            <Text color="dimmed" align="center">
-              {item.description}
-            </Text>
-          </Card>
-        ))}
-      </SimpleGrid>
-    </Container>
+      <Container sx={{ py: 5 }}>
+        <Typography variant="h4" gutterBottom>
+          לוח בקרה
+        </Typography>
+        <Grid container spacing={3}>
+          {dashboardItems.map((item) => (
+            <Grid item xs={12} sm={6} md={4} key={item.title}>
+              <Card>
+                <CardActionArea onClick={() => navigate(item.route)}>
+                  <CardContent>
+                    <Box display="flex" justifyContent="center" mb={2}>
+                      {item.icon}
+                    </Box>
+                    <Typography variant="h6" align="center">
+                      {item.title}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" align="center">
+                      {item.description}
+                    </Typography>
+                  </CardContent>
+                </CardActionArea>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+
+        {/* גרף דוגמה */}
+        <Box mt={6}>
+          <Typography variant="h5" gutterBottom>
+            סקירה גרפית
+          </Typography>
+          <Paper sx={{ p: 3 }}>
+            <BarChart
+              xAxis={[{ scaleType: 'band', data: ['ינואר', 'פברואר', 'מרץ', 'אפריל'] }]}
+              series={[{ data: [15, 20, 10, 25], label: 'מספר הקבצים שהועלו' }]}
+              width={500}
+              height={300}
+            />
+          </Paper>
+        </Box>
+      </Container>
+
+      {/* Footer קבוע */}
+      <Box sx={{ bgcolor: "#f5f5f5", py: 2, mt: 6 }} component="footer">
+        <Container>
+          <Typography variant="body2" color="textSecondary" align="center">
+            © {new Date().getFullYear()} מערכת ניהול הקלדות. כל הזכויות שמורות.
+          </Typography>
+        </Container>
+      </Box>
+    </>
   );
-}
+};
+
+export default Dashboard;

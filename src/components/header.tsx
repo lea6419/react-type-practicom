@@ -1,41 +1,19 @@
-import React from 'react';
-import { Home, User, LogIn, LogOut } from 'lucide-react';
+import { AppBar, Toolbar, Typography, Button, Box } from "@mui/material";
+import { Link } from "react-router-dom";
 
-const Header = () => {
+export default function Header() {
   return (
-    <header className="sticky top-0 z-50 bg-white shadow-md w-full flex items-center justify-between p-4">
-      {/* Navigation Buttons Left Side */}
-      <div className="flex items-center space-x-4">
-        <button className="text-gray-700 hover:text-blue-600 transition-colors">
-          <Home size={24} />
-        </button>
-        <button className="text-gray-700 hover:text-blue-600 transition-colors">
-          <User size={24} />
-        </button>
-      </div>
-
-      {/* Logo Center */}
-      <div className="absolute left-1/2 transform -translate-x-1/2">
-        <img 
-          src="/api/placeholder/150/50" 
-          alt="Logo" 
-          className="h-10 object-contain"
-        />
-      </div>
-
-      {/* Login/Logout Buttons Right Side */}
-      <div className="flex items-center space-x-4">
-        <button className="flex items-center text-green-600 hover:text-green-800 transition-colors">
-          <LogIn size={20} className="mr-2" />
-          Login
-        </button>
-        <button className="flex items-center text-red-600 hover:text-red-800 transition-colors">
-          <LogOut size={20} className="mr-2" />
-          Logout
-        </button>
-      </div>
-    </header>
+    <AppBar position="fixed" color="default" elevation={1}>
+      <Toolbar sx={{ justifyContent: "space-between" }}>
+        <Typography variant="h6" component={Link} to="/" color="inherit" sx={{ textDecoration: "none" }}>
+          הקלדות+
+        </Typography>
+        <Box>
+          <Button component={Link} to="/about" color="inherit">אודות</Button>
+          <Button component={Link} to="/contact" color="inherit">צור קשר</Button>
+          <Button component={Link} to="/dashboard" variant="outlined" sx={{ ml: 2 }}>כניסה</Button>
+        </Box>
+      </Toolbar>
+    </AppBar>
   );
-};
-
-export default Header;
+}
