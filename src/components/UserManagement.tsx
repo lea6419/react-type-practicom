@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import  { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
   Container, Card, CardContent, Typography, Button, Grid, CircularProgress, Box, Snackbar, IconButton
@@ -61,8 +61,11 @@ const UserManagement = () => {
     }
   };
 
-  const viewFiles = (userId: number) => {
-    console.log('צפייה בקבצים של:', userId);
+  const viewFiles = async(userId: number) => {
+        const response = await fetch(`https://server-type-practicom.onrender.com/api/files/user-files/${userId}`);
+        const data = await response.json();
+        console.log(data);
+      
   };
 
   useEffect(() => {
@@ -91,55 +94,55 @@ const UserManagement = () => {
         />
       ) : (
         <Grid container spacing={3}>
-          {users.map((user) => (
-            <Grid item xs={12} md={6} key={user.id}>
-              <Card elevation={3} sx={{ borderRadius: 4 }}>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>{user.username}</Typography>
-                  <Typography color="textSecondary" variant="body2">📧 {user.email}</Typography>
-                  <Typography variant="body2">🎯 תפקיד: {user.role}</Typography>
-
-                  <Box mt={2} display="flex" gap={1}>
-                    <Button
-                      size="small"
-                      startIcon={<EditIcon />}
-                      variant="outlined"
-                      onClick={() =>
-                        editUser(user.id, {
-                          username: user.username,
-                          email: user.email,
-                          role: user.role,
-                        })
-                      }
-                    >
-                      עריכה
-                    </Button>
-
-                    <Button
-                      size="small"
-                      color="error"
-                      variant="outlined"
-                      startIcon={<DeleteIcon />}
-                      onClick={() => deleteUser(user.id)}
-                    >
-                      מחיקה
-                    </Button>
-
-                    <Button
-                      size="small"
-                      color="primary"
-                      variant="outlined"
-                      startIcon={<VisibilityIcon />}
-                      onClick={() => viewFiles(user.id)}
-                    >
-                      קבצים
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+        {users.map((user) => (
+          <Grid key={user.id}>
+            <Card elevation={3} sx={{ borderRadius: 4 }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>{user.username}</Typography>
+                <Typography color="textSecondary" variant="body2"> {user.email}</Typography>
+                <Typography variant="body2"> תפקיד: {user.role}</Typography>
+              
+                <Box mt={2} display="flex" gap={1}>
+                  <Button
+                    size="small"
+                    startIcon={<EditIcon />}
+                    variant="outlined"
+                    onClick={() =>
+                      editUser(user.id, {
+                        username: user.username,
+                        email: user.email,
+                        role: user.role,
+                      })
+                    }
+                  >
+                    
+                  </Button>
+      
+                  <Button
+                    size="small"
+                    color="error"
+                    variant="outlined"
+                    startIcon={<DeleteIcon />}
+                    onClick={() => deleteUser(user.id)}
+                  >
+                    
+                  </Button>
+      
+                  <Button
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                    startIcon={<VisibilityIcon />}
+                    onClick={() => viewFiles(user.id)}
+                  >
+                    
+                  </Button>
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
       )}
     </Container>
   );

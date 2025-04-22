@@ -1,8 +1,6 @@
-import React from "react";
+
 import { useNavigate } from "react-router-dom";
 import {
-  AppBar,
-  Toolbar,
   Typography,
   Container,
   Grid,
@@ -11,7 +9,6 @@ import {
   CardContent,
   CardActionArea,
   Box,
-  Button
 } from "@mui/material";
 import {
   Folder as FolderIcon,
@@ -19,19 +16,12 @@ import {
   BarChart as ReportsIcon,
   Settings as SettingsIcon,
   ListAlt as ActivityIcon,
-  Logout as LogoutIcon
 } from "@mui/icons-material";
 
 import { BarChart } from '@mui/x-charts/BarChart';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-
-  const handleLogout = () => {
-    sessionStorage.removeItem("token");
-    navigate("/login");
-  };
-
   const dashboardItems = [
     {
       icon: <FolderIcon sx={{ fontSize: 40, color: "#1976d2" }} />,
@@ -67,17 +57,8 @@ const Dashboard = () => {
 
   return (
     <>
-      {/* Header קבוע */}
-      <AppBar position="static" sx={{ backgroundColor: "#1976d2" }}>
-        <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
-            מערכת ניהול הקלדות
-          </Typography>
-          <Button color="inherit" startIcon={<LogoutIcon />} onClick={handleLogout}>
-            התנתקות
-          </Button>
-        </Toolbar>
-      </AppBar>
+
+
 
       <Container sx={{ py: 5 }}>
         <Typography variant="h4" gutterBottom>
@@ -85,14 +66,24 @@ const Dashboard = () => {
         </Typography>
         <Grid container spacing={3}>
           {dashboardItems.map((item) => (
-            <Grid item xs={12} sm={6} md={4} key={item.title}>
-              <Card>
+            <Grid key={item.title}>
+              <Card
+                sx={{
+                  transition: "0.3s",
+                  boxShadow: 3,
+                  borderRadius: 3,
+                  "&:hover": {
+                    transform: "translateY(-5px)",
+                    boxShadow: 6,
+                  }
+                }}
+              >
                 <CardActionArea onClick={() => navigate(item.route)}>
                   <CardContent>
                     <Box display="flex" justifyContent="center" mb={2}>
                       {item.icon}
                     </Box>
-                    <Typography variant="h6" align="center">
+                    <Typography variant="h6" align="center" sx={{ fontWeight: "bold" }}>
                       {item.title}
                     </Typography>
                     <Typography variant="body2" color="text.secondary" align="center">
@@ -101,6 +92,7 @@ const Dashboard = () => {
                   </CardContent>
                 </CardActionArea>
               </Card>
+
             </Grid>
           ))}
         </Grid>
@@ -121,14 +113,8 @@ const Dashboard = () => {
         </Box>
       </Container>
 
-      {/* Footer קבוע */}
-      <Box sx={{ bgcolor: "#f5f5f5", py: 2, mt: 6 }} component="footer">
-        <Container>
-          <Typography variant="body2" color="textSecondary" align="center">
-            © {new Date().getFullYear()} מערכת ניהול הקלדות. כל הזכויות שמורות.
-          </Typography>
-        </Container>
-      </Box>
+
+
     </>
   );
 };

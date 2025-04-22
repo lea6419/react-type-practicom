@@ -1,4 +1,4 @@
-import React from "react";
+
 import { Box, Container, Typography, Grid, Button, Paper } from "@mui/material";
 import StorageIcon from "@mui/icons-material/Storage";
 import CloudDoneIcon from "@mui/icons-material/CloudDone";
@@ -9,7 +9,7 @@ export default function HomePage() {
     <Box sx={{ minHeight: "100vh", background: "linear-gradient(to bottom, #f0f4f8, #dbeafe)", pt: 10, pb: 6 }}>
       <Container>
         <Grid container spacing={6} alignItems="center">
-          <Grid item xs={12} md={6}>
+          <Grid>
             <Typography variant="h3" fontWeight="bold" gutterBottom>
               מערכת ניהול הקלדות חכמה
             </Typography>
@@ -20,7 +20,7 @@ export default function HomePage() {
               התחילי עכשיו
             </Button>
           </Grid>
-          <Grid item xs={12} md={6}>
+          <Grid>
             <img src="/assets/typing-illustration.svg" alt="הקלדה" style={{ width: "100%" }} />
           </Grid>
         </Grid>
@@ -35,7 +35,7 @@ export default function HomePage() {
               { icon: <CloudDoneIcon fontSize="large" color="primary" />, label: "שמירה בענן" },
               { icon: <AccessTimeIcon fontSize="large" color="primary" />, label: "גישה בזמן אמת" },
             ].map((item, index) => (
-              <Grid item xs={12} md={4} key={index}>
+              <Grid  key={index}>
                 <Paper elevation={3} sx={{ p: 3, textAlign: "center", borderRadius: 3 }}>
                   {item.icon}
                   <Typography variant="h6" mt={1}>
