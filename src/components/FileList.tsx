@@ -1,397 +1,361 @@
-"use client"
-
-import type React from "react"
-import { useState } from "react"
+import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Button,
-  Card,
-  Chip,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  Grid,
-  IconButton,
-  Paper,
+  Typography,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Tooltip,
-  Typography,
-} from "@mui/material"
-import {
-  CloudUpload as CloudUploadIcon,
-  Download as DownloadIcon,
-  Info as InfoIcon,
-  Refresh as RefreshIcon,
-  FileDownload as FileDownloadIcon,
-} from "@mui/icons-material"
-import { ExtendedFileItem, FileStatus, FileStatusLabels } from "./FileManagementSystem"
+  Paper,
+  Button,
+  Snackbar,
+  Alert,
+  CircularProgress,
+  TextField,
+  InputAdornment,
+  Chip,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Grid,
+  Divider,
+} from '@mui/material';
+import { 
+  Download as DownloadIcon, 
+  Upload as UploadIcon, 
+  Check as CheckIcon,
+  Search as SearchIcon,
+  FilterList as FilterIcon,
+  Clear as ClearIcon
+} from '@mui/icons-material';
 
-
-interface FilesListProps {
-  files: ExtendedFileItem[]
-  onDownload: (fileId: string, isTypedVersion?: boolean) => Promise<void>
-  onUploadTyped: (originalFileId: string, file: File, fileId: number) => Promise<void>
-  loading: boolean
-  onRefresh: () => void
+interface FileItem {
+  id: string;
+  name: string;
+  userId: string;
+  userName: string;
+  uploadDate: string;
+  hasTypedVersion: boolean;
+  status?: number;
 }
 
-export default function FilesList({ files, onDownload, onUploadTyped, loading, onRefresh }: FilesListProps) {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [selectedOriginalFileId, setSelectedOriginalFileId] = useState<string | null>(null)
-  const [selectedFileId, setSelectedFileId] = useState<number | null>(null)
-  const [detailsOpen, setDetailsOpen] = useState(false)
-  const [selectedFileDetails, setSelectedFileDetails] = useState<ExtendedFileItem | null>(null)
+interface FilesListProps {
+  files: FileItem[];
+  onDownload: (fileId: string) => void;
+  onUploadTyped: (fileId: string, file: File) => Promise<void>;
+  loading?: boolean;
+}
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files.length > 0) {
-      setSelectedFile(event.target.files[0])
+// מיפוי סטטוסים לתצוגה
+const statusMap: Record<number, { label: string; color: 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' }> = {
+  0: { label: 'ממתין להקלדה', color: 'warning' },
+  1: { label: 'הוקלד', color: 'success' },
+  2: { label: 'בתהליך', color: 'info' },
+  3: { label: 'נדחה', color: 'error' },
+};
+
+export default function FilesList({ files, onDownload, onUploadTyped, loading: externalLoading }: FilesListProps) {
+  const [loading, setLoading] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<number | 'all'>('all');
+  const [filteredFiles, setFilteredFiles] = useState<FileItem[]>(files);
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: 'success' | 'error';
+  }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
+
+  // עדכון הקבצים המסוננים כאשר הקבצים, מונח החיפוש או מסנן הסטטוס משתנים
+  useEffect(() => {
+    let result = [...files];
+    
+    // סינון לפי מונח חיפוש
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      result = result.filter(
+        file => 
+          file.name.toLowerCase().includes(searchLower) || 
+          file.userName.toLowerCase().includes(searchLower)
+      );
     }
-  }
-
-  const handleUploadTyped = async (originalFileId: string, fileId: number) => {
-    if (!selectedFile) return
-
-    try {
-      await onUploadTyped(originalFileId, selectedFile, fileId)
-      setSelectedFile(null)
-      setSelectedOriginalFileId(null)
-      setSelectedFileId(null)
-    } catch (error) {
-      console.error("שגיאה בהעלאת הקובץ המוקלד:", error)
+    
+    // סינון לפי סטטוס
+    if (statusFilter !== 'all') {
+      result = result.filter(file => file.status === statusFilter);
     }
-  }
+    
+    setFilteredFiles(result);
+  }, [files, searchTerm, statusFilter]);
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "לא זמין"
-    try {
-      const date = new Date(dateString)
-      return date.toLocaleDateString("he-IL", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    } catch (e) {
-      return dateString
-    }
-  }
+  const handleDownload = (fileId: string) => {
+    if (externalLoading) return; // אם יש טעינה חיצונית, לא לאפשר הורדה
+    onDownload(fileId);
+  };
 
-  const formatFileSize = (bytes?: number) => {
-    if (!bytes) return "לא זמין"
-    const sizes = ["Bytes", "KB", "MB", "GB", "TB"]
-    if (bytes === 0) return "0 Byte"
-    const i = Math.floor(Math.log(bytes) / Math.log(1024))
-    return Math.round(bytes / Math.pow(1024, i)) + " " + sizes[i]
-  }
+  const handleTypedFileUpload = async (fileId: string, originalFileName: string) => {
+    if (externalLoading) return; // אם יש טעינה חיצונית, לא לאפשר העלאה
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.doc,.docx,.pdf,.txt';
 
-  const handleShowDetails = (file: ExtendedFileItem) => {
-    setSelectedFileDetails(file)
-    setDetailsOpen(true)
-  }
+    input.onchange = async () => {
+      const typedFile = input.files?.[0];
+      if (!typedFile) return;
 
-  const handleCloseDetails = () => {
-    setDetailsOpen(false)
-    setSelectedFileDetails(null)
-  }
+      setLoading(fileId);
+      try {
+        await onUploadTyped(fileId, typedFile);
+        setSnackbar({
+          open: true,
+          message: 'הקובץ המוקלד הועלה בהצלחה!',
+          severity: 'success',
+        });
+      } catch (error) {
+        setSnackbar({
+          open: true,
+          message: 'אירעה שגיאה בהעלאת הקובץ המוקלד',
+          severity: 'error',
+        });
+      } finally {
+        setLoading(null);
+      }
+    };
 
-  const getStatusChip = (status?: number) => {
-    const fileStatus = status !== undefined ? status : FileStatus.UploadedByUser
-    const statusInfo = FileStatusLabels[fileStatus as FileStatus] || FileStatusLabels[FileStatus.UploadedByUser]
+    input.click();
+  };
 
-    return <Chip label={statusInfo.label} color={statusInfo.color as any} size="small" variant="outlined" />
-  }
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+  };
 
-  if (loading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
-        <CircularProgress />
-      </Box>
-    )
-  }
-
-  if (files.length === 0) {
-    return (
-      <Card sx={{ textAlign: "center", p: 3 }}>
-        <Typography variant="body1">אין קבצים להצגה</Typography>
-        <Button startIcon={<RefreshIcon />} onClick={onRefresh} sx={{ mt: 2 }} variant="outlined">
-          רענן רשימה
-        </Button>
-      </Card>
-    )
-  }
+  // חישוב סטטיסטיקה של הקבצים
+  const stats = {
+    total: files.length,
+    typed: files.filter(file => file.hasTypedVersion).length,
+    waiting: files.filter(file => !file.hasTypedVersion).length,
+  };
 
   return (
-    <Box>
-      <Paper elevation={0} sx={{ mb: 2, p: 1, display: "flex", justifyContent: "flex-end" }}>
-        <Button startIcon={<RefreshIcon />} onClick={onRefresh} variant="outlined" size="small">
-          רענן רשימה
-        </Button>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Typography variant="h6" sx={{ textAlign: 'right' }}>
+        רשימת קבצים
+      </Typography>
+
+      {/* סטטיסטיקה */}
+      <Paper sx={{ p: 2, mb: 2 }}>
+        <Grid container spacing={2} justifyContent="space-around">
+        <Grid component="div">
+            <Typography variant="body2" color="text.secondary" align="center">
+              סה"כ קבצים
+            </Typography>
+            <Typography variant="h6" align="center">
+              {stats.total}
+            </Typography>
+          </Grid>
+          <Divider orientation="vertical" flexItem />
+         <Grid container>
+            <Typography variant="body2" color="text.secondary" align="center">
+              הוקלדו
+            </Typography>
+            <Typography variant="h6" align="center" color="success.main">
+              {stats.typed}
+            </Typography>
+          </Grid>
+          <Divider orientation="vertical" flexItem />
+          <Grid container>
+            <Typography variant="body2" color="text.secondary" align="center">
+              ממתינים להקלדה
+            </Typography>
+            <Typography variant="h6" align="center" color="warning.main">
+              {stats.waiting}
+            </Typography>
+          </Grid>
+        </Grid>
       </Paper>
 
-      <TableContainer component={Paper} sx={{ boxShadow: 2, borderRadius: 2 }}>
-        <Table sx={{ minWidth: 650 }} size="small">
-          <TableHead sx={{ backgroundColor: "rgba(25, 118, 210, 0.08)" }}>
-            <TableRow>
-              <TableCell align="right" sx={{ fontWeight: "bold" }}>
-                שם הקובץ
-              </TableCell>
-              <TableCell align="right" sx={{ fontWeight: "bold" }}>
-                סטטוס
-              </TableCell>
-              <TableCell align="right" sx={{ fontWeight: "bold" }}>
-                תאריך העלאה
-              </TableCell>
-              <TableCell align="right" sx={{ fontWeight: "bold" }}>
-                פעולות
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {files.map((file) => (
-              <TableRow key={file.id} sx={{ "&:hover": { backgroundColor: "rgba(0, 0, 0, 0.04)" } }}>
-                <TableCell align="right" component="th" scope="row">
-                  {file.name || file.fileName || "ללא שם"}
-                </TableCell>
-                <TableCell align="right">{getStatusChip(file.status)}</TableCell>
-                <TableCell align="right">{formatDate(file.createdAt || file.uploadDate)}</TableCell>
-                <TableCell align="right">
-                  <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
-                    <Tooltip title="הורד קובץ מקורי">
-                      <IconButton size="small" onClick={() => onDownload(file.id.toString())} color="primary">
-                        <DownloadIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-
-                    {file.hasTypedVersion && (
-                      <Tooltip title="הורד קובץ מוקלד">
-                        <IconButton size="small" onClick={() => onDownload(file.id.toString(), true)} color="success">
-                          <FileDownloadIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-
-                    {file.status === FileStatus.UploadedByUser && (
-                      <Tooltip title="העלה גרסה מוקלדת">
-                        <IconButton
-                          size="small"
-                          color="warning"
-                          component="label"
-                          onClick={() => {
-                            setSelectedOriginalFileId(file.id.toString())
-                            setSelectedFileId(Number(file.id))
-                          }}
-                        >
-                          <input
-                            type="file"
-                            hidden
-                            onChange={handleFileChange}
-                            onClick={(e) => {
-                              e.stopPropagation()
-                            }}
-                          />
-                          <CloudUploadIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-
-                    <Tooltip title="פרטי קובץ">
-                      <IconButton size="small" onClick={() => handleShowDetails(file)} color="info">
-                        <InfoIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                  </Box>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      {selectedFile && selectedOriginalFileId && selectedFileId && (
-        <Box sx={{ mt: 2, p: 2, border: "1px dashed grey", borderRadius: 1 }}>
-          <Typography variant="body2" sx={{ mb: 1 }}>
-            נבחר קובץ: {selectedFile.name}
-          </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => handleUploadTyped(selectedOriginalFileId, selectedFileId)}
-            disabled={loading}
-            startIcon={loading ? <CircularProgress size={20} /> : <CloudUploadIcon />}
-          >
-            העלה גרסה מוקלדת
-          </Button>
-          <Button
+      {/* חיפוש וסינון */}
+      <Grid container spacing={2} sx={{ mb: 2 }} >
+       <Grid >
+          <TextField
+            fullWidth
             variant="outlined"
-            sx={{ ml: 1 }}
-            onClick={() => {
-              setSelectedFile(null)
-              setSelectedOriginalFileId(null)
-              setSelectedFileId(null)
+            placeholder="חיפוש לפי שם קובץ או משתמש..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+              endAdornment: searchTerm && (
+                <InputAdornment position="end">
+                  <Button 
+                    size="small" 
+                    onClick={() => setSearchTerm('')}
+                    sx={{ minWidth: 'auto' }}
+                  >
+                    <ClearIcon fontSize="small" />
+                  </Button>
+                </InputAdornment>
+              ),
+              sx: { direction: 'rtl' }
             }}
+          />
+        </Grid>
+        <Grid >
+          <FormControl fullWidth>
+            <InputLabel id="status-filter-label" sx={{ right: 14, left: 'auto' }}>
+              סינון לפי סטטוס
+            </InputLabel>
+            <Select
+              labelId="status-filter-label"
+              value={statusFilter}
+              label="סינון לפי סטטוס"
+              onChange={(e) => setStatusFilter(e.target.value as number | 'all')}
+              sx={{ textAlign: 'right' }}
+              startAdornment={
+                <InputAdornment position="start">
+                  <FilterIcon />
+                </InputAdornment>
+              }
+            >
+              <MenuItem value="all">הכל</MenuItem>
+              {Object.entries(statusMap).map(([value, { label }]) => (
+                <MenuItem key={value} value={Number(value)}>
+                  {label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+      </Grid>
+
+      {/* כפתור ניקוי מסננים */}
+      {(searchTerm || statusFilter !== 'all') && (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+          <Button 
+            variant="outlined" 
+            size="small" 
+            onClick={clearFilters}
+            startIcon={<ClearIcon />}
           >
-            בטל
+            נקה מסננים
           </Button>
         </Box>
       )}
 
-      {/* Dialog for file details */}
-      <Dialog open={detailsOpen} onClose={handleCloseDetails} maxWidth="sm" fullWidth dir="rtl">
-        <DialogTitle sx={{ fontWeight: "bold", backgroundColor: "rgba(25, 118, 210, 0.08)" }}>פרטי קובץ</DialogTitle>
-        <DialogContent dividers>
-          {selectedFileDetails && (
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <Typography variant="subtitle1" fontWeight="bold">
-                  מידע כללי
-                </Typography>
-                <Divider sx={{ my: 1 }} />
-              </Grid>
+      {externalLoading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress size={24} />
+          <Typography sx={{ mr: 2 }}>טוען נתונים...</Typography>
+        </Box>
+      )}
 
-              <Grid item xs={6}>
-                <Typography variant="body2" color="text.secondary">
-                  מזהה קובץ
-                </Typography>
-                <Typography variant="body1">{selectedFileDetails.id}</Typography>
-              </Grid>
-
-              <Grid item xs={6}>
-                <Typography variant="body2" color="text.secondary">
-                  שם קובץ
-                </Typography>
-                <Typography variant="body1">
-                  {selectedFileDetails.name || selectedFileDetails.fileName || "לא זמין"}
-                </Typography>
-              </Grid>
-
-              <Grid item xs={6}>
-                <Typography variant="body2" color="text.secondary">
-                  סטטוס
-                </Typography>
-                <Box sx={{ mt: 0.5 }}>{getStatusChip(selectedFileDetails.status)}</Box>
-              </Grid>
-
-              <Grid item xs={6}>
-                <Typography variant="body2" color="text.secondary">
-                  תאריך העלאה
-                </Typography>
-                <Typography variant="body1">
-                  {formatDate(selectedFileDetails.createdAt || selectedFileDetails.uploadDate)}
-                </Typography>
-              </Grid>
-
-              <Grid item xs={6}>
-                <Typography variant="body2" color="text.secondary">
-                  מזהה משתמש
-                </Typography>
-                <Typography variant="body1">{selectedFileDetails.userId}</Typography>
-              </Grid>
-
-              <Grid item xs={6}>
-                <Typography variant="body2" color="text.secondary">
-                  שם משתמש
-                </Typography>
-                <Typography variant="body1">{selectedFileDetails.userName || "לא זמין"}</Typography>
-              </Grid>
-
-              {selectedFileDetails.size && (
-                <Grid item xs={6}>
-                  <Typography variant="body2" color="text.secondary">
-                    גודל קובץ
-                  </Typography>
-                  <Typography variant="body1">{formatFileSize(selectedFileDetails.size)}</Typography>
-                </Grid>
-              )}
-
-              {selectedFileDetails.type && (
-                <Grid item xs={6}>
-                  <Typography variant="body2" color="text.secondary">
-                    סוג קובץ
-                  </Typography>
-                  <Typography variant="body1">{selectedFileDetails.type}</Typography>
-                </Grid>
-              )}
-
-              {selectedFileDetails.lastModified && (
-                <Grid item xs={6}>
-                  <Typography variant="body2" color="text.secondary">
-                    עודכן לאחרונה
-                  </Typography>
-                  <Typography variant="body1">{formatDate(selectedFileDetails.lastModified)}</Typography>
-                </Grid>
-              )}
-
-              <Grid item xs={12}>
-                <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 1 }}>
-                  גרסה מוקלדת
-                </Typography>
-                <Divider sx={{ my: 1 }} />
-              </Grid>
-
-              <Grid item xs={12}>
-                <Typography variant="body2" color="text.secondary">
-                  סטטוס גרסה מוקלדת
-                </Typography>
-                <Typography variant="body1">
-                  {selectedFileDetails.hasTypedVersion ? "קיימת גרסה מוקלדת" : "אין גרסה מוקלדת"}
-                </Typography>
-              </Grid>
-
-              {selectedFileDetails.hasTypedVersion && selectedFileDetails.typedFileName && (
-                <Grid item xs={12}>
-                  <Typography variant="body2" color="text.secondary">
-                    שם קובץ מוקלד
-                  </Typography>
-                  <Typography variant="body1">{selectedFileDetails.typedFileName}</Typography>
-                </Grid>
-              )}
-
-              <Grid item xs={12} sx={{ mt: 2 }}>
-                <Box sx={{ display: "flex", gap: 1 }}>
-                  <Button
-                    variant="outlined"
-                    startIcon={<DownloadIcon />}
-                    onClick={() => {
-                      onDownload(selectedFileDetails.id.toString())
-                      handleCloseDetails()
-                    }}
-                  >
-                    הורד קובץ מקורי
-                  </Button>
-
-                  {selectedFileDetails.hasTypedVersion && (
-                    <Button
-                      variant="outlined"
-                      color="success"
-                      startIcon={<FileDownloadIcon />}
-                      onClick={() => {
-                        onDownload(selectedFileDetails.id.toString(), true)
-                        handleCloseDetails()
-                      }}
-                    >
-                      הורד קובץ מוקלד
-                    </Button>
-                  )}
-                </Box>
-              </Grid>
-            </Grid>
+      {!externalLoading && filteredFiles.length === 0 ? (
+        <Paper sx={{ p: 4, textAlign: 'center' }}>
+          {files.length === 0 ? (
+            <Typography>אין קבצים להצגה</Typography>
+          ) : (
+            <Typography>לא נמצאו קבצים התואמים לחיפוש</Typography>
           )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDetails} color="primary">
-            סגור
-          </Button>
-        </DialogActions>
-      </Dialog>
+        </Paper>
+      ) : (
+        <TableContainer component={Paper}>
+          <Table dir="rtl">
+            <TableHead>
+              <TableRow>
+                <TableCell align="right">שם הקובץ</TableCell>
+                <TableCell align="right">משתמש</TableCell>
+                <TableCell align="right">תאריך העלאה</TableCell>
+                <TableCell align="right">סטטוס</TableCell>
+                <TableCell align="right">פעולות</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredFiles.map((file) => (
+                <TableRow key={file.id}>
+                  <TableCell align="right" component="th" scope="row">
+                    {file.name}
+                  </TableCell>
+                  <TableCell align="right">{file.userName}</TableCell>
+                  <TableCell align="right">{file.uploadDate}</TableCell>
+                  <TableCell align="right">
+                    <Chip 
+                      label={statusMap[file.status || 0]?.label || 'לא ידוע'} 
+                      color={statusMap[file.status || 0]?.color || 'default'}
+                      size="small"
+                    />
+                  </TableCell>
+                  <TableCell align="right">
+                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={() => handleDownload(file.id)}
+                        startIcon={<DownloadIcon />}
+                      >
+                        הורד
+                      </Button>
+
+                      {file.hasTypedVersion ? (
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          disabled
+                          startIcon={<CheckIcon />}
+                          color="success"
+                        >
+                          הועלה מוקלד
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() => handleTypedFileUpload(file.id, file.name)}
+                          disabled={loading === file.id}
+                          startIcon={
+                            loading === file.id ? (
+                              <CircularProgress size={16} />
+                            ) : (
+                              <UploadIcon />
+                            )
+                          }
+                        >
+                          {loading === file.id ? 'מעלה...' : 'העלה מוקלד'}
+                        </Button>
+                      )}
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          severity={snackbar.severity}
+          variant="filled"
+          onClose={() => setSnackbar((s) => ({ ...s, open: false }))}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
-  )
+  );
 }

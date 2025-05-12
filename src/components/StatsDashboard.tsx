@@ -1,97 +1,167 @@
-import { Card, Grid, Title, Text, Skeleton, Flex } from '@mantine/core';
-import { useEffect, useState } from 'react';
-import { Pie } from 'react-chartjs-2';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
+"use client"
 
-ChartJS.register(ArcElement, Tooltip, Legend);
+import { useEffect, useState } from "react"
+import { Box, Card, Grid, Typography, Skeleton, Paper, CircularProgress, Alert } from "@mui/material"
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title } from "chart.js"
+import { Pie, Bar } from "react-chartjs-2"
 
-const COLORS = ['#FF6384', '#36A2EB', '#4BC0C0'];
+ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement, Title)
 
-function StatCard({ label, value }: { label: string; value: number }) {
+const COLORS = ["#2196f3", "#ff9800", "#4caf50", "#3f51b5", "#f44336"]
+
+function StatCard({ label, value, loading }: { label: string; value: number | string; loading: boolean }) {
   return (
-    <div className="p-6">
-    <Card shadow="sm" padding="lg" radius="md" withBorder>
-      <Text size="md" fw={600} ta="center" c="dimmed" mb={4}>
-        {label}
-      </Text>
-      <Text size="xl" fw={700} ta="center">
-        {value}
-      </Text>
-    </Card>
-    </div>
-  );
+    <Paper elevation={2} sx={{ p: 3, height: "100%", borderRadius: 2 }}>
+      {loading ? (
+        <Skeleton variant="rectangular" height={60} />
+      ) : (
+        <>
+          <Typography variant="body1" sx={{ fontWeight: 600, textAlign: "center", color: "text.secondary", mb: 1 }}>
+            {label}
+          </Typography>
+          <Typography variant="h4" sx={{ fontWeight: 700, textAlign: "center" }}>
+            {value}
+          </Typography>
+        </>
+      )}
+    </Paper>
+  )
 }
 
 export default function StatsDashboard() {
-  const [stats, setStats] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetch('https://server-type-practicom.onrender.com/stats')
-      .then((res) => res.json())
+    const token = localStorage.getItem("token")
+    if (!token) {
+      setError("אין הרשאת גישה, יש להתחבר מחדש")
+      setLoading(false)
+      return
+    }
+
+    fetch("https://server-type-practicom.onrender.com/stats", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("שגיאה בטעינת הנתונים")
+        }
+        return res.json()
+      })
       .then((data) => {
-        setStats(data);
-        setLoading(false);
+        setStats(data)
+        setLoading(false)
       })
       .catch((error) => {
-        console.error("Error fetching data:", error);
-        setLoading(false);
-      });
-  }, []);
+        console.error("Error fetching data:", error)
+        setError("שגיאה בטעינת הנתונים: " + error.message)
+        setLoading(false)
+      })
+  }, [])
 
-  if (loading) return <Skeleton height={500} radius="md" />;
+  if (loading) {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: 400 }}>
+        <CircularProgress />
+      </Box>
+    )
+  }
+
+  if (error) {
+    return <Alert severity="error">{error}</Alert>
+  }
+
+  if (!stats) {
+    return <Alert severity="warning">לא נמצאו נתונים</Alert>
+  }
 
   const filePieData = {
-    labels: ['בהמתנה', 'בתהליך', 'הושלמו'],
+    labels: ["בהמתנה", "בתהליך", "הושלמו", "הוחזרו למשתמש", "נמחקו"],
     datasets: [
       {
-        label: 'סטטוס קבצים',
+        label: "סטטוס קבצים",
         data: [
-          stats.filesWaiting,
-          stats.filesInProgress,
-          stats.filesCompleted
+          stats.filesWaiting || 0,
+          stats.filesInProgress || 0,
+          stats.filesCompleted || 0,
+          stats.filesReturned || 0,
+          stats.filesDeleted || 0,
         ],
         backgroundColor: COLORS,
-        borderColor: '#fff',
+        borderColor: "#fff",
         borderWidth: 1,
-      }
-    ]
-  };
+      },
+    ],
+  }
+
+  const userBarData = {
+    labels: ["לקוחות", "קלדניות", "מנהלים"],
+    datasets: [
+      {
+        label: "משתמשים לפי סוג",
+        data: [stats.clientsCount || 0, stats.typistsCount || 0, stats.adminsCount || 0],
+        backgroundColor: ["#2196f3", "#4caf50", "#f44336"],
+      },
+    ],
+  }
+
+  const barOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "top" as const,
+      },
+      title: {
+        display: false,
+      },
+    },
+  }
 
   return (
-    <div style={{ width: '100%' }}>
-      <Title order={2} mb="md" ta="center">
+    <Box sx={{ width: "100%" }}>
+      <Typography variant="h5" sx={{ mb: 3, fontWeight: "bold", textAlign: "center" }}>
         סטטיסטיקות מערכת
-      </Title>
+      </Typography>
 
-      <Grid>
-        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <StatCard label="סה״כ משתמשים" value={stats.totalUsers} />
-        </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <StatCard label="קלדניות" value={stats.typistsCount} />
-        </Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
-          <StatCard label="לקוחות" value={stats.clientsCount} />
-        </Grid.Col>
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard label="סה״כ משתמשים" value={stats.totalUsers || 0} loading={loading} />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard label="קלדניות" value={stats.typistsCount || 0} loading={loading} />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard label="לקוחות" value={stats.clientsCount || 0} loading={loading} />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <StatCard label="סה״כ קבצים" value={stats.totalFiles || 0} loading={loading} />
+        </Grid>
       </Grid>
 
-      <Grid mt="xl">
-        <Grid.Col span={12}> {/* שונה ל-span={12} כדי לתפוס את כל הרוחב */}
-          <StatCard label="סה״כ קבצים" value={stats.totalFiles} />
-        </Grid.Col>
-
-        <Grid.Col span={{ base: 12, md: 6 }}>
-          <Card shadow="sm" padding="lg" radius="md" withBorder h={300}>
-            <Text size="md" fw={600} ta="center" c="dimmed" mb="md">
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={6}>
+          <Card sx={{ p: 3, height: "100%", boxShadow: 2, borderRadius: 2 }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: "bold", textAlign: "center" }}>
               התפלגות סטטוס קבצים
-            </Text>
-            <Flex justify="center" align="center" h="100%">
+            </Typography>
+            <Box sx={{ height: 300, display: "flex", justifyContent: "center", alignItems: "center" }}>
               <Pie data={filePieData} />
-            </Flex>
+            </Box>
           </Card>
-        </Grid.Col>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <Card sx={{ p: 3, height: "100%", boxShadow: 2, borderRadius: 2 }}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: "bold", textAlign: "center" }}>
+              משתמשים לפי סוג
+            </Typography>
+            <Box sx={{ height: 300, display: "flex", justifyContent: "center", alignItems: "center" }}>
+              <Bar options={barOptions} data={userBarData} />
+            </Box>
+          </Card>
+        </Grid>
       </Grid>
-    </div>
-  );
+    </Box>
+  )
 }
