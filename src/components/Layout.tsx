@@ -1,56 +1,263 @@
-
-import { Outlet, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   AppBar,
   Toolbar,
   Typography,
   Box,
   Container,
-  Button
+  Button,
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  IconButton,
+  Divider,
+  useTheme,
+  useMediaQuery,
+  Avatar,
+  Menu,
+  MenuItem,
+  Tooltip,
+  Fade
 } from "@mui/material";
-import LogoutIcon from "@mui/icons-material/Logout";
+import {
+  Menu as MenuIcon,
+  Dashboard as DashboardIcon,
+  Description as FileIcon,
+  People as PeopleIcon,
+  Assessment as ReportIcon,
+  Logout as LogoutIcon,
+  AccountCircle as AccountIcon,
+  Settings as SettingsIcon,
+  ChevronLeft as ChevronLeftIcon
+} from "@mui/icons-material";
+
+const drawerWidth = 240;
 
 function AppLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const [drawerOpen, setDrawerOpen] = useState(!isMobile);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleLogout = () => {
+    localStorage.removeItem("token");
     sessionStorage.removeItem("token");
     navigate("/login");
   };
 
+  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleProfileMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const menuItems = [
+    { text: 'דשבורד', icon: <DashboardIcon />, path: '/dashboard' },
+    { text: 'ניהול קבצים', icon: <FileIcon />, path: '/files' },
+    { text: 'ניהול משתמשים', icon: <PeopleIcon />, path: '/users' },
+    { text: 'דוחות', icon: <ReportIcon />, path: '/reports' },
+  ];
+
+  const isActive = (path: string) => location.pathname === path;
+
   return (
-    <Box
-      display="flex"
-      flexDirection="column"
-      minHeight="100vh"
-      width="100%"
-    >
-      {/* Header מוצמד למעלה ברוחב מלא */}
-      <AppBar position="static" sx={{ backgroundColor: "#1976d2", width: "100%" }}>
+    <Box sx={{ display: 'flex', minHeight: '100vh', overflow: 'hidden' }}>
+      {/* AppBar */}
+      <AppBar 
+        position="fixed" 
+        sx={{ 
+          zIndex: theme.zIndex.drawer + 1,
+          background: 'linear-gradient(90deg, #1976d2, #42a5f5)',
+          boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)'
+        }}
+      >
         <Toolbar>
-          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+          <IconButton
+            color="inherit"
+            edge="start"
+            onClick={() => setDrawerOpen(!drawerOpen)}
+            sx={{ mr: 2 }}
+          >
+            <MenuIcon />
+          </IconButton>
+          
+          <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 'bold' }}>
             מערכת ניהול הקלדות
           </Typography>
-          <Button color="inherit" startIcon={<LogoutIcon />} onClick={handleLogout}>
-            התנתקות
-          </Button>
+          
+          <Tooltip title="הגדרות משתמש">
+            <IconButton color="inherit" onClick={handleProfileMenuOpen}>
+              <Avatar sx={{ width: 32, height: 32, bgcolor: '#bbdefb', color: '#1565c0' }}>
+                <AccountIcon />
+              </Avatar>
+            </IconButton>
+          </Tooltip>
+          
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleProfileMenuClose}
+            TransitionComponent={Fade}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'right',
+            }}
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+            }}
+          >
+            <MenuItem onClick={() => { handleProfileMenuClose(); navigate('/profile'); }}>
+              <ListItemIcon>
+                <AccountIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>פרופיל</ListItemText>
+            </MenuItem>
+            <MenuItem onClick={() => { handleProfileMenuClose(); navigate('/settings'); }}>
+              <ListItemIcon>
+                <SettingsIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>הגדרות</ListItemText>
+            </MenuItem>
+            <Divider />
+            <MenuItem onClick={handleLogout}>
+              <ListItemIcon>
+                <LogoutIcon fontSize="small" color="error" />
+              </ListItemIcon>
+              <ListItemText sx={{ color: 'error.main' }}>התנתקות</ListItemText>
+            </MenuItem>
+          </Menu>
         </Toolbar>
       </AppBar>
 
-      {/* תוכן דינמי – יתפוס את כל הגובה שנותר */}
-      <Box flex="1" width="100%">
-        <Container maxWidth="lg" sx={{ py: 5 }}>
+      {/* Drawer */}
+      <Drawer
+        variant={isMobile ? "temporary" : "persistent"}
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        sx={{
+          width: drawerWidth,
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {
+            width: drawerWidth,
+            boxSizing: 'border-box',
+            borderRight: '1px solid rgba(0, 0, 0, 0.08)',
+            boxShadow: drawerOpen ? '4px 0 10px rgba(0, 0, 0, 0.05)' : 'none',
+          },
+        }}
+      >
+        <Toolbar />
+        <Box sx={{ overflow: 'auto', mt: 2 }}>
+          {isMobile && (
+            <Box display="flex" justifyContent="flex-end" px={1}>
+              <IconButton onClick={() => setDrawerOpen(false)}>
+                <ChevronLeftIcon />
+              </IconButton>
+            </Box>
+          )}
+          
+          <List>
+            {menuItems.map((item) => (
+              <ListItem 
+              component="button"
+                key={item.text}
+                onClick={() => {
+                  navigate(item.path);
+                  if (isMobile) setDrawerOpen(false);
+                }}
+                sx={{
+                  mb: 0.5,
+                  mx: 1,
+                  borderRadius: 1,
+                  backgroundColor: isActive(item.path) ? 'rgba(25, 118, 210, 0.08)' : 'transparent',
+                  '&:hover': {
+                    backgroundColor: 'rgba(25, 118, 210, 0.12)',
+                  },
+                  ...(isActive(item.path) && {
+                    borderRight: '3px solid #1976d2',
+                  }),
+                }}
+              >
+                <ListItemIcon sx={{ color: isActive(item.path) ? 'primary.main' : 'inherit' }}>
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText 
+                  primary={item.text} 
+                  primaryTypographyProps={{ 
+                    fontWeight: isActive(item.path) ? 'bold' : 'normal',
+                    color: isActive(item.path) ? 'primary.main' : 'inherit'
+                  }} 
+                />
+              </ListItem>
+            ))}
+          </List>
+          
+          <Divider sx={{ my: 2 }} />
+          
+          <List>
+            <ListItem 
+                 component="button"
+
+              onClick={handleLogout}
+              sx={{
+                mb: 0.5,
+                mx: 1,
+                borderRadius: 1,
+                '&:hover': {
+                  backgroundColor: 'rgba(211, 47, 47, 0.08)',
+                },
+              }}
+            >
+              <ListItemIcon sx={{ color: 'error.main' }}>
+                <LogoutIcon />
+              </ListItemIcon>
+              <ListItemText 
+                primary="התנתקות" 
+                primaryTypographyProps={{ color: 'error.main' }} 
+              />
+            </ListItem>
+          </List>
+        </Box>
+      </Drawer>
+
+      {/* Main Content */}
+      <Box 
+        component="main" 
+        sx={{ 
+          flexGrow: 1, 
+          p: 3, 
+          width: { sm: `calc(100% - ${drawerOpen ? drawerWidth : 0}px)` },
+          transition: theme.transitions.create(['width', 'margin'], {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.leavingScreen,
+          }),
+          backgroundColor: '#f5f5f5',
+        }}
+      >
+        <Toolbar />
+        <Container maxWidth="xl" sx={{ mt: 2 }}>
           <Outlet />
         </Container>
       </Box>
 
-      {/* Footer מוצמד לתחתית המסך */}
+      {/* Footer */}
       <Box
         component="footer"
         sx={{
-          bgcolor: "#f5f5f5",
-          py: 2,
-          width: "100%"
+          position: 'fixed',
+          bottom: 0,
+          width: '100%',
+          bgcolor: '#fff',
+          borderTop: '1px solid rgba(0, 0, 0, 0.08)',
+          py: 1.5,
+          zIndex: theme.zIndex.drawer - 1,
         }}
       >
         <Container maxWidth="lg">
