@@ -26,7 +26,7 @@ import {
   Button,
 } from "@mui/material"
 import { Search as SearchIcon, Refresh as RefreshIcon } from "@mui/icons-material"
-import FileUploader from "./file-uploader"
+// import FileUploader from "./file-uploader"
 import FilesList from "./FileList"
 
 import axios from "axios"
@@ -564,21 +564,21 @@ export default function FileManagementSystem() {
           }}
           dir="rtl"
         >
-          <Tab label="העלאת קובץ" />
-          <Tab label="רשימת קבצים" />
+          {/* <Tab label="העלאת קובץ" /> */}
+          {/* <Tab label="רשימת קבצים" /> */}
           <Tab label="קבצים לפי משתמש" />
         </Tabs>
 
-        <Box hidden={tabValue !== 0}>
+        {/* <Box hidden={tabValue !== 0}>
           {tabValue === 0 && <FileUploader users={users} onUpload={handleUploadFile} />}
-        </Box>
+        </Box> */}
 
-        <Box hidden={tabValue !== 1}>
-          {tabValue === 1 && (
+        {/* <Box hidden={tabValue !== 1}>
+          {tabValue === 1 && ( */}
             <>
               <Box sx={{ mb: 3 }}>
                 <Grid container spacing={2} alignItems="center">
-                  <Grid item xs={12} md={4}>
+                  <Grid component="div" container spacing={2} alignItems="center">
                     <TextField
                       fullWidth
                       label="חיפוש קבצים"
@@ -602,7 +602,7 @@ export default function FileManagementSystem() {
                       dir="rtl"
                     />
                   </Grid>
-                  <Grid item xs={12} md={4}>
+                  <Grid component="div" container spacing={2} alignItems="center">
                     <FormControl fullWidth>
                       <InputLabel id="user-filter-label" sx={{ right: 14, left: "auto" }}>
                         סנן לפי משתמש
@@ -623,7 +623,7 @@ export default function FileManagementSystem() {
                       </Select>
                     </FormControl>
                   </Grid>
-                  <Grid item xs={12} md={4}>
+                  <Grid component="div" container spacing={2} alignItems="center">
                     <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
                       <Button variant="outlined" startIcon={<RefreshIcon />} onClick={handleRefreshFiles}>
                         רענן רשימה
@@ -638,34 +638,30 @@ export default function FileManagementSystem() {
                   {Object.entries(FileStatusLabels).map(([statusKey, statusInfo]) => {
                     const count = statusCounts[Number(statusKey)] || 0
                     return (
-                      <Grid item xs={6} sm={4} md={2.4} key={statusKey}>
+                      
+                      
+                      <Grid container item xs={6} sm={4} md={3} key={statusKey}>
                         <Paper
                           sx={{
                             p: 1.5,
                             textAlign: "center",
-                            border: `1px solid ${
-                              statusInfo.color === "info"
+                            border: `1px solid ${statusInfo.color === "info"
                                 ? "#2196f3"
                                 : statusInfo.color === "warning"
                                   ? "#ff9800"
                                   : statusInfo.color === "success"
                                     ? "#4caf50"
-                                    : statusInfo.color === "primary"
-                                      ? "#3f51b5"
-                                      : statusInfo.color === "error"
-                                        ? "#f44336"
-                                        : "#e0e0e0"
-                            }`,
+                                    : statusInfo.color}`,
                           }}
                         >
-                          <Typography variant="body2" color="text.secondary">
-                            {statusInfo.label}
-                          </Typography>
-                          <Typography variant="h6" fontWeight="bold">
-                            {count}
-                          </Typography>
-                        </Paper>
-                      </Grid>
+                        <Typography variant="body2" color="text.secondary">
+                          {statusInfo.label}
+                        </Typography>
+                        <Typography variant="h6" fontWeight="bold">
+                          {count}
+                        </Typography>
+                      </Paper>
+                    </Grid>
                     )
                   })}
                 </Grid>
@@ -681,12 +677,12 @@ export default function FileManagementSystem() {
                 onRefresh={handleRefreshFiles}
               />
             </>
-          )}
-        </Box>
+          {/* )} */}
+        {/* </Box> */}
 
-        <Box hidden={tabValue !== 2}>
-          {tabValue === 2 && (
-            <UserFileStats
+        {/* <Box hidden={tabValue !== 2}> */}
+          {/* {tabValue === 2 && (
+            <FileStatus
               files={files}
               users={users}
               onDownload={handleDownloadFile}
@@ -694,8 +690,8 @@ export default function FileManagementSystem() {
               onDelete={handleDeleteFile}
               loading={loading}
             />
-          )}
-        </Box>
+          )} */}
+        {/* </Box> */}
       </CardContent>
 
       <Snackbar

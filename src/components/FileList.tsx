@@ -169,25 +169,25 @@ export default function FilesList({
       {/* סטטיסטיקה */}
       <Paper sx={{ p: 2, mb: 3 }}>
         <Grid container spacing={2} justifyContent="space-around">
-          <Grid item>
+          <Box >
             <Typography variant="body2" color="text.secondary" align="center">
               סה"כ קבצים
             </Typography>
             <Typography variant="h6" align="center">
               {stats.total}
             </Typography>
-          </Grid>
+          </Box>
           <Divider orientation="vertical" flexItem />
-          <Grid item>
+          <Box >
             <Typography variant="body2" color="text.secondary" align="center">
               הוקלדו
             </Typography>
             <Typography variant="h6" align="center" color="success.main">
               {stats.typed}
             </Typography>
-          </Grid>
+          </Box>
           <Divider orientation="vertical" flexItem />
-          <Grid item>
+          <Grid >
             <Typography variant="body2" color="text.secondary" align="center">
               ממתינים להקלדה
             </Typography>
@@ -328,95 +328,92 @@ export default function FilesList({
         <DialogTitle sx={{ fontWeight: "bold", backgroundColor: "rgba(25, 118, 210, 0.08)" }}>פרטי קובץ</DialogTitle>
         <DialogContent dividers>
           {selectedFileDetails && (
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
+        <Box component="div" display="flex" flexDirection="column" sx={{ gap: 2 }}>
+              <Box>
                 <Typography variant="subtitle1" fontWeight="bold">
                   מידע כללי
                 </Typography>
                 <Divider sx={{ my: 1 }} />
-              </Grid>
+              </Box>
 
-              <Grid item xs={6}>
+              <Box>
                 <Typography variant="body2" color="text.secondary">
                   מזהה קובץ
                 </Typography>
                 <Typography variant="body1">{selectedFileDetails.id}</Typography>
-              </Grid>
+              </Box>
 
-              <Grid item xs={6}>
+              <Box>
                 <Typography variant="body2" color="text.secondary">
                   שם קובץ
                 </Typography>
-                <Typography variant="body1">
-                  {selectedFileDetails.name || selectedFileDetails.fileName || "לא זמין"}
-                </Typography>
-              </Grid>
+              </Box>
 
-              <Grid item xs={6}>
+              <Box sx={{ display: "flex", flexDirection: "column" }}>
                 <Typography variant="body2" color="text.secondary">
                   סטטוס
                 </Typography>
                 <Box sx={{ mt: 0.5 }}>{getStatusChip(selectedFileDetails.status)}</Box>
-              </Grid>
+              </Box>
 
-              <Grid item xs={6}>
+              <Box sx={{ display: "flex", flexDirection: "column" }}>
                 <Typography variant="body2" color="text.secondary">
                   תאריך העלאה
                 </Typography>
                 <Typography variant="body1">
                   {formatDate(selectedFileDetails.createdAt || selectedFileDetails.uploadDate)}
                 </Typography>
-              </Grid>
+              </Box>
 
-              <Grid item xs={6}>
+              <Box sx={{ display: "flex", flexDirection: "column" }}>
                 <Typography variant="body2" color="text.secondary">
                   מזהה משתמש
                 </Typography>
                 <Typography variant="body1">{selectedFileDetails.userId}</Typography>
-              </Grid>
+              </Box>
 
-              <Grid item xs={6}>
+              <Box sx={{ display: "flex", flexDirection: "column" }}>
                 <Typography variant="body2" color="text.secondary">
                   שם משתמש
                 </Typography>
                 <Typography variant="body1">{selectedFileDetails.userName || "לא זמין"}</Typography>
-              </Grid>
+              </Box>
 
               {selectedFileDetails.size && (
-                <Grid item xs={6}>
+                <Box sx={{ display: "flex", flexDirection: "column" }}>
                   <Typography variant="body2" color="text.secondary">
                     גודל קובץ
                   </Typography>
                   <Typography variant="body1">{formatFileSize(selectedFileDetails.size)}</Typography>
-                </Grid>
+                </Box>
               )}
 
               {selectedFileDetails.type && (
-                <Grid item xs={6}>
+                <Box sx={{ display: "flex", flexDirection: "column" }}>
                   <Typography variant="body2" color="text.secondary">
                     סוג קובץ
                   </Typography>
                   <Typography variant="body1">{selectedFileDetails.type}</Typography>
-                </Grid>
+                </Box>
               )}
 
               {selectedFileDetails.lastModified && (
-                <Grid item xs={6}>
+                <Box sx={{ display: "flex", flexDirection: "column" }}>
                   <Typography variant="body2" color="text.secondary">
                     עודכן לאחרונה
                   </Typography>
                   <Typography variant="body1">{formatDate(selectedFileDetails.lastModified)}</Typography>
-                </Grid>
+                </Box>
               )}
 
-              <Grid item xs={12}>
+              <Box sx={{ display: "flex", flexDirection: "column" }}>
                 <Typography variant="subtitle1" fontWeight="bold" sx={{ mt: 1 }}>
                   גרסה מוקלדת
                 </Typography>
                 <Divider sx={{ my: 1 }} />
-              </Grid>
+              </Box>
 
-              <Grid item xs={12}>
+              <Box sx={{ display: "flex", flexDirection: "column" }}>
                 <Typography variant="body2" color="text.secondary">
                   סטטוס גרסה מוקלדת
                 </Typography>
@@ -428,18 +425,18 @@ export default function FilesList({
                     </Typography>
                   )}
                 </Typography>
-              </Grid>
+              </Box>
 
               {selectedFileDetails.hasTypedVersion && selectedFileDetails.typedFileName && (
-                <Grid item xs={12}>
+                <Box sx={{ display: "flex", flexDirection: "column" }}>
                   <Typography variant="body2" color="text.secondary">
                     שם קובץ מוקלד
                   </Typography>
                   <Typography variant="body1">{selectedFileDetails.typedFileName}</Typography>
-                </Grid>
+                </Box>
               )}
 
-              <Grid item xs={12} sx={{ mt: 2 }}>
+              <Box sx={{ display: "flex", flexDirection: "column", mt: 2 }}>
                 <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
                   <Button
                     variant="outlined"
@@ -451,95 +448,82 @@ export default function FilesList({
                   >
                     הורד קובץ מקורי
                   </Button>
+                </Box>
 
-                  {selectedFileDetails.hasTypedVersion && (
-                    <Button
-                      variant="outlined"
-                      color="success"
-                      startIcon={<FileDownloadIcon />}
-                      onClick={() => {
-                        onDownload(selectedFileDetails.id.toString(), true)
-                        handleCloseDetails()
-                      }}
-                    >
-                      הורד קובץ מוקלד
-                    </Button>
-                  )}
+                <Button
+                  variant="outlined"
+                  color="info"
+                  startIcon={<VisibilityIcon />}
+                  onClick={() => {
+                    onView(selectedFileDetails.id.toString())
+                    handleCloseDetails()
+                  }}
+                >
+                  צפה בקובץ
+                </Button>
 
+                {selectedFileDetails.hasTypedVersion && (
                   <Button
                     variant="outlined"
                     color="info"
                     startIcon={<VisibilityIcon />}
                     onClick={() => {
-                      onView(selectedFileDetails.id.toString())
+                      onView(selectedFileDetails.id.toString(), true)
                       handleCloseDetails()
                     }}
                   >
-                    צפה בקובץ
+                    צפה בקובץ מוקלד
                   </Button>
+                )}
 
-                  {selectedFileDetails.hasTypedVersion && (
-                    <Button
-                      variant="outlined"
-                      color="info"
-                      startIcon={<VisibilityIcon />}
-                      onClick={() => {
-                        onView(selectedFileDetails.id.toString(), true)
-                        handleCloseDetails()
-                      }}
-                    >
-                      צפה בקובץ מוקלד
-                    </Button>
-                  )}
-
-                  {selectedFileDetails.status !== FileStatus.SoftDeleted && (
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      startIcon={<DeleteIcon />}
-                      onClick={() => {
-                        handleDeleteClick(selectedFileDetails.id.toString())
-                        handleCloseDetails()
-                      }}
-                    >
-                      מחק קובץ
-                    </Button>
-                  )}
-                </Box>
-              </Grid>
-            </Grid>
+                {selectedFileDetails.status !== FileStatus.SoftDeleted && (
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    startIcon={<DeleteIcon />}
+                    onClick={() => {
+                      handleDeleteClick(selectedFileDetails.id.toString())
+                      handleCloseDetails()
+                    }}
+                  >
+                    מחק קובץ
+                  </Button>
+                )}
+              </Box>
+          
+              </Box>
           )}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseDetails} color="primary">
-            סגור
-          </Button>
-        </DialogActions>
-      </Dialog>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleCloseDetails} color="primary">
+          סגור
+        </Button>
+      </DialogActions>
+    </Dialog>
 
-      {/* Delete confirmation dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-        dir="rtl"
-      >
-        <DialogTitle id="alert-dialog-title">{"האם אתה בטוח שברצונך למחוק את הקובץ?"}</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="alert-dialog-description">
-            פעולה זו תסמן את הקובץ כמחוק במערכת. האם להמשיך?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)} color="primary">
-            ביטול
-          </Button>
-          <Button onClick={handleConfirmDelete} color="error" autoFocus>
-            מחק
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+      {/* Delete confirmation dialog */ }
+  <Dialog
+    open={deleteDialogOpen}
+    onClose={() => setDeleteDialogOpen(false)}
+    aria-labelledby="alert-dialog-title"
+    aria-describedby="alert-dialog-description"
+    dir="rtl"
+  >
+    <DialogTitle id="alert-dialog-title">{"האם אתה בטוח שברצונך למחוק את הקובץ?"}</DialogTitle>
+    <DialogContent>
+      <DialogContentText id="alert-dialog-description">
+        פעולה זו תסמן את הקובץ כמחוק במערכת. האם להמשיך?
+      </DialogContentText>
+    </DialogContent>
+    <DialogActions>
+      <Button onClick={() => setDeleteDialogOpen(false)} color="primary">
+        ביטול
+      </Button>
+      <Button onClick={handleConfirmDelete} color="error" autoFocus>
+        מחק
+      </Button>
+    </DialogActions>
+  </Dialog>
+    </Box >
   )
 }
