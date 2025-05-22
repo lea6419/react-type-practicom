@@ -1,287 +1,655 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import {
-  Box,
   Container,
-  Paper,
-  TextField,
-  Button,
-  Typography,
-  Alert,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Card,
   CardContent,
-  Fade,
+  Typography,
+  Button,
+  Grid,
   CircularProgress,
-  InputAdornment
+  Box,
+  Snackbar,
+  IconButton,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Paper,
+  Divider,
+  Avatar,
+  Chip,
+  Alert,
+  Tooltip,
+  Fade,
+  TableContainer,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  Backdrop
 } from '@mui/material';
 import {
-  Person,
-  Email,
-  Lock,
-  PersonAdd,
-  AdminPanelSettings
+  Edit as EditIcon,
+  Delete as DeleteIcon,
+  Visibility as VisibilityIcon,
+  Close as CloseIcon,
+  PersonAdd as PersonAddIcon,
+  Refresh as RefreshIcon,
+  FileCopy as FileIcon,
+  CheckCircle as CheckCircleIcon,
+  Error as ErrorIcon,
+  Person as PersonIcon
 } from '@mui/icons-material';
-import axios from 'axios';
+
+// טיפוסי נתונים
+interface User {
+  id: number;
+  username: string;
+  email: string;
+  role: string;
+}
+
+interface UserFile {
+  id: string;
+  name: string;
+  uploadDate: string;
+  status: number;
+  hasTypedVersion: boolean;
+}
 
 const UserManagement = () => {
-  const [userDetails, setUserDetails] = useState({
-    fullName: '',
-    email: '',
-    role: 'User',
-    password: '',
-  });
-
-  const [loading, setLoading] = useState(false);
+  // מצבים
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  
+  // מצבי דיאלוג
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [filesDialogOpen, setFilesDialogOpen] = useState(false);
+  const [addUserDialogOpen, setAddUserDialogOpen] = useState(false);
+  
+  // נתוני משתמש לעריכה/מחיקה
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [editedUser, setEditedUser] = useState<Partial<User>>({});
+  const [userFiles, setUserFiles] = useState<UserFile[]>([]);
+  const [userFilesLoading, setUserFilesLoading] = useState(false);
+  
+  // נתוני משתמש חדש
+  const [newUser, setNewUser] = useState({
+    username: '',
+    email: '',
+    password: '',
+    role: 'user'
+  });
 
-  const validateForm = () => {
-    if (!userDetails.fullName) {
-      setError('אנא הזן שם מלא');
-      return false;
-    }
-    if (!userDetails.email) {
-      setError('אנא הזן כתובת אימייל');
-      return false;
-    }
-    if (!userDetails.password || userDetails.password.length < 6) {
-      setError('סיסמה חייבת להכיל לפחות 6 תווים');
-      return false;
-    }
-    return true;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setSuccess(null);
-
-    if (!validateForm()) return;
-
-    setLoading(true);
-
+  // פונקציה לשליפת משתמשים
+  const fetchUsers = async () => {
     try {
-      const response = await axios.post('http://localhost:5000/api/user/register', userDetails);
-      setSuccess('משתמש נרשם בהצלחה');
-      setUserDetails({
-        fullName: '',
-        email: '',
-        role: 'User',
-        password: '',
+      setLoading(true);
+      const response = await axios.get('https://server-type-practicom.onrender.com/api/User/client', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
       });
+      setUsers(response.data);
+      setError(null);
     } catch (error: any) {
-      setError(error.response?.data?.message || 'שגיאה בהרשמת משתמש');
+      console.error('שגיאה בשליפת משתמשים:', error);
+      setError('שגיאה בעת שליפת המשתמשים: ' + (error.response?.data?.message || error.message));
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  const roleColors = {
-    User: '#4CAF50',
-    Admin: '#F44336', 
-    Typeist: '#2196F3'
+  // פונקציה לרענון רשימת המשתמשים
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchUsers();
+  };
+
+  // פונקציה לפתיחת דיאלוג עריכה
+  const handleEditClick = (user: User) => {
+    setSelectedUser(user);
+    setEditedUser({
+      username: user.username,
+      email: user.email,
+      role: user.role
+    });
+    setEditDialogOpen(true);
+  };
+
+  // פונקציה לשמירת שינויים בעריכה
+  const handleSaveEdit = async () => {
+    if (!selectedUser || !editedUser.username || !editedUser.email) {
+      setError('נא למלא את כל השדות הנדרשים');
+      return;
+    }
+
+    try {
+      await axios.put(
+        `https://server-type-practicom.onrender.com/api/User/${selectedUser.id}`,
+        editedUser,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      setEditDialogOpen(false);
+      setSuccess(`המשתמש ${editedUser.username} עודכן בהצלחה`);
+      fetchUsers();
+    } catch (error: any) {
+      setError('שגיאה בעדכון המשתמש: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
+  // פונקציה לפתיחת דיאלוג מחיקה
+  const handleDeleteClick = (user: User) => {
+    setSelectedUser(user);
+    setDeleteDialogOpen(true);
+  };
+
+  // פונקציה למחיקת משתמש
+  const handleConfirmDelete = async () => {
+    if (!selectedUser) return;
+
+    try {
+      await axios.delete(`https://server-type-practicom.onrender.com/api/User/${selectedUser.id}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      setDeleteDialogOpen(false);
+      setSuccess(`המשתמש ${selectedUser.username} נמחק בהצלחה`);
+      fetchUsers();
+    } catch (error: any) {
+      setError('שגיאה במחיקת המשתמש: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
+  // פונקציה לפתיחת דיאלוג הוספת משתמש
+  const handleAddUserClick = () => {
+    setNewUser({
+      username: '',
+      email: '',
+      password: '',
+      role: 'user'
+    });
+    setAddUserDialogOpen(true);
+  };
+
+  // פונקציה להוספת משתמש חדש
+  const handleAddUser = async () => {
+    if (!newUser.username || !newUser.email || !newUser.password) {
+      setError('נא למלא את כל השדות הנדרשים');
+      return;
+    }
+
+    try {
+      await axios.post(
+        'https://server-type-practicom.onrender.com/api/User/register',
+        newUser,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      setAddUserDialogOpen(false);
+      setSuccess(`המשתמש ${newUser.username} נוסף בהצלחה`);
+      fetchUsers();
+    } catch (error: any) {
+      setError('שגיאה בהוספת המשתמש: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
+  // פונקציה לצפייה בקבצי משתמש
+  const handleViewFiles = async (user: User) => {
+    setSelectedUser(user);
+    setUserFilesLoading(true);
+    setFilesDialogOpen(true);
+    
+    try {
+      const response = await axios.get(
+        `https://server-type-practicom.onrender.com/user-files/${user.id}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      setUserFiles(response.data);
+    } catch (error: any) {
+      console.error('שגיאה בשליפת קבצים:', error);
+      setError('שגיאה בשליפת קבצי המשתמש: ' + (error.response?.data?.message || error.message));
+      setUserFiles([]);
+    } finally {
+      setUserFilesLoading(false);
+    }
+  };
+
+  // פונקציה לסגירת הודעות
+  const handleCloseAlert = () => {
+    setError(null);
+    setSuccess(null);
+  };
+
+  // שליפת משתמשים בטעינה ראשונית
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  // פונקציה להצגת סטטוס קובץ
+  const getFileStatusChip = (status: number, hasTypedVersion: boolean) => {
+    switch (status) {
+      case 0:
+        return <Chip size="small" label="ממתין להקלדה" color="warning" />;
+      case 1:
+        return <Chip size="small" label="הוקלד" color="success" icon={<CheckCircleIcon />} />;
+      case 2:
+        return <Chip size="small" label="בתהליך" color="info" />;
+      case 3:
+        return <Chip size="small" label="נדחה" color="error" icon={<ErrorIcon />} />;
+      default:
+        return <Chip size="small" label="לא ידוע" />;
+    }
+  };
+
+  // פונקציה להצגת צבע לפי תפקיד
+  const getRoleColor = (role: string) => {
+    switch (role.toLowerCase()) {
+      case 'admin':
+        return 'error';
+      case 'manager':
+        return 'primary';
+      case 'typist':
+        return 'success';
+      default:
+        return 'default';
+    }
+  };
+
+  // פונקציה להצגת אות ראשונה של שם משתמש
+  const getInitial = (name: string) => {
+    return name.charAt(0).toUpperCase();
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-        py: 4
-      }}
-    >
-      <Container maxWidth="md">
-        <Fade in timeout={600}>
-          <Card 
-            elevation={10}
-            sx={{
-              borderRadius: 4,
-              overflow: 'visible',
-              background: 'rgba(255, 255, 255, 0.95)',
-              backdropFilter: 'blur(10px)'
-            }}
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4, direction: 'rtl' }}>
+      {/* כותרת וכפתורים */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4" component="h1" fontWeight="bold">
+          ניהול משתמשים
+        </Typography>
+        <Box>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<PersonAddIcon />}
+            onClick={handleAddUserClick}
+            sx={{ ml: 1 }}
           >
-            <CardContent sx={{ p: 5 }}>
-              <Box sx={{ textAlign: 'center', mb: 4 }}>
-                <Box
-                  sx={{
-                    width: 80,
-                    height: 80,
-                    backgroundColor: 'primary.main',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    margin: '0 auto 20px',
-                    boxShadow: '0 8px 25px rgba(33, 150, 243, 0.3)',
-                  }}
-                >
-                  <AdminPanelSettings sx={{ fontSize: 40, color: 'white' }} />
-                </Box>
-                <Typography
-                  variant="h4"
-                  component="h1"
-                  fontWeight="bold"
-                  color="text.primary"
-                  sx={{ mb: 1 }}
-                >
-                  ניהול משתמשים
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  הוספת משתמש חדש למערכת
-                </Typography>
-              </Box>
+            הוסף משתמש
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<RefreshIcon />}
+            onClick={handleRefresh}
+            disabled={refreshing}
+          >
+            רענן
+          </Button>
+        </Box>
+      </Box>
 
-              {error && (
-                <Fade in>
-                  <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
-                    {error}
-                  </Alert>
-                </Fade>
-              )}
+      {/* הודעות שגיאה והצלחה */}
+      <Snackbar
+        open={!!error}
+        autoHideDuration={6000}
+        onClose={handleCloseAlert}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseAlert} severity="error" variant="filled">
+          {error}
+        </Alert>
+      </Snackbar>
 
-              {success && (
-                <Fade in>
-                  <Alert severity="success" sx={{ mb: 3, borderRadius: 2 }}>
-                    {success}
-                  </Alert>
-                </Fade>
-              )}
+      <Snackbar
+        open={!!success}
+        autoHideDuration={6000}
+        onClose={handleCloseAlert}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseAlert} severity="success" variant="filled">
+          {success}
+        </Alert>
+      </Snackbar>
 
-              <Box component="form" onSubmit={handleSubmit}>
-                <TextField
-                  fullWidth
-                  label="שם מלא"
-                  value={userDetails.fullName}
-                  onChange={(e) => setUserDetails({
-                    ...userDetails, 
-                    fullName: e.target.value
-                  })}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Person color="action" />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    mb: 3,
-                    '& .MuiOutlinedInput-root': {
+      {/* מסך טעינה */}
+      {loading ? (
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh" flexDirection="column">
+          <CircularProgress size={60} />
+          <Typography variant="h6" sx={{ mt: 2 }}>
+            טוען משתמשים...
+          </Typography>
+        </Box>
+      ) : (
+        <>
+          {/* רשימת משתמשים */}
+          {users.length === 0 ? (
+            <Paper sx={{ p: 4, textAlign: 'center' }}>
+              <Typography variant="h6">לא נמצאו משתמשים</Typography>
+            </Paper>
+          ) : (
+            <Grid container spacing={3}>
+              {users.map((user) => (
+                <Grid item xs={12} sm={6} md={4} key={user.id}>
+                  <Card 
+                    elevation={3} 
+                    sx={{ 
                       borderRadius: 2,
-                      '&:hover fieldset': {
-                        borderColor: 'primary.main',
-                      },
-                    },
-                  }}
-                />
-
-                <TextField
-                  fullWidth
-                  label="דואר אלקטרוני"
-                  type="email"
-                  value={userDetails.email}
-                  onChange={(e) => setUserDetails({
-                    ...userDetails, 
-                    email: e.target.value
-                  })}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Email color="action" />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    mb: 3,
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                      '&:hover fieldset': {
-                        borderColor: 'primary.main',
-                      },
-                    },
-                  }}
-                />
-
-                <FormControl 
-                  fullWidth 
-                  sx={{ 
-                    mb: 3,
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                    },
-                  }}
-                >
-                  <InputLabel>תפקיד</InputLabel>
-                  <Select
-                    value={userDetails.role}
-                    label="תפקיד"
-                    onChange={(e) => setUserDetails({
-                      ...userDetails, 
-                      role: e.target.value
-                    })}
+                      transition: 'transform 0.2s, box-shadow 0.2s',
+                      '&:hover': {
+                        transform: 'translateY(-5px)',
+                        boxShadow: 6
+                      }
+                    }}
                   >
-                    <MenuItem value="User">משתמש</MenuItem>
-                    <MenuItem value="Admin">מנהל</MenuItem>
-                    <MenuItem value="Typeist">קלדנית</MenuItem>
-                  </Select>
-                </FormControl>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                        <Avatar 
+                          sx={{ 
+                            bgcolor: getRoleColor(user.role), 
+                            width: 50, 
+                            height: 50,
+                            mr: 2
+                          }}
+                        >
+                          {getInitial(user.username)}
+                        </Avatar>
+                        <Box>
+                          <Typography variant="h6" fontWeight="bold">
+                            {user.username}
+                          </Typography>
+                          <Typography color="text.secondary" variant="body2">
+                            {user.email}
+                          </Typography>
+                        </Box>
+                      </Box>
+                      
+                      <Divider sx={{ my: 1.5 }} />
+                      
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Chip 
+                          label={user.role} 
+                          color={getRoleColor(user.role) as any}
+                          size="small"
+                          icon={<PersonIcon />}
+                        />
+                        
+                        <Box>
+                          <Tooltip title="ערוך משתמש" arrow>
+                            <IconButton 
+                              size="small" 
+                              color="primary"
+                              onClick={() => handleEditClick(user)}
+                            >
+                              <EditIcon />
+                            </IconButton>
+                          </Tooltip>
+                          
+                          <Tooltip title="מחק משתמש" arrow>
+                            <IconButton 
+                              size="small" 
+                              color="error"
+                              onClick={() => handleDeleteClick(user)}
+                            >
+                              <DeleteIcon />
+                            </IconButton>
+                          </Tooltip>
+                          
+                          <Tooltip title="צפה בקבצים" arrow>
+                            <IconButton 
+                              size="small" 
+                              color="info"
+                              onClick={() => handleViewFiles(user)}
+                            >
+                              <VisibilityIcon />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          )}
+        </>
+      )}
 
-                <TextField
-                  fullWidth
-                  label="סיסמה"
-                  type="password"
-                  value={userDetails.password}
-                  onChange={(e) => setUserDetails({
-                    ...userDetails, 
-                    password: e.target.value
-                  })}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Lock color="action" />
-                      </InputAdornment>
-                    ),
-                  }}
-                  sx={{
-                    mb: 4,
-                    '& .MuiOutlinedInput-root': {
-                      borderRadius: 2,
-                      '&:hover fieldset': {
-                        borderColor: 'primary.main',
-                      },
-                    },
-                  }}
-                />
+      {/* דיאלוג עריכת משתמש */}
+      <Dialog 
+        open={editDialogOpen} 
+        onClose={() => setEditDialogOpen(false)}
+        fullWidth
+        maxWidth="sm"
+        dir="rtl"
+      >
+        <DialogTitle>
+          עריכת משתמש: {selectedUser?.username}
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              label="שם משתמש"
+              fullWidth
+              value={editedUser.username || ''}
+              onChange={(e) => setEditedUser({ ...editedUser, username: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+            />
+            <TextField
+              label="אימייל"
+              fullWidth
+              type="email"
+              value={editedUser.email || ''}
+              onChange={(e) => setEditedUser({ ...editedUser, email: e.target.value })}
+              InputLabelProps={{ shrink: true }}
+            />
+            <FormControl fullWidth>
+              <InputLabel id="edit-role-label">תפקיד</InputLabel>
+              <Select
+                labelId="edit-role-label"
+                value={editedUser.role || ''}
+                label="תפקיד"
+                onChange={(e) => setEditedUser({ ...editedUser, role: e.target.value })}
+              >
+                <MenuItem value="admin">מנהל מערכת</MenuItem>
+                <MenuItem value="manager">מנהל</MenuItem>
+                <MenuItem value="typist">מקליד</MenuItem>
+                <MenuItem value="user">משתמש רגיל</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditDialogOpen(false)} color="inherit">
+            ביטול
+          </Button>
+          <Button onClick={handleSaveEdit} color="primary" variant="contained">
+            שמור שינויים
+          </Button>
+        </DialogActions>
+      </Dialog>
 
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="contained"
-                  size="large"
-                  disabled={loading}
-                  startIcon={loading ? <CircularProgress size={20} /> : <PersonAdd />}
-                  sx={{
-                    py: 1.5,
-                    borderRadius: 2,
-                    background: 'linear-gradient(45deg, #2196F3, #21CBF3)',
-                    boxShadow: '0 4px 15px rgba(33, 150, 243, 0.4)',
-                    '&:hover': {
-                      background: 'linear-gradient(45deg, #1976D2, #1CB5E0)',
-                      boxShadow: '0 6px 20px rgba(33, 150, 243, 0.6)',
-                    },
-                  }}
-                >
-                  {loading ? 'מוסיף משתמש...' : 'הוסף משתמש'}
-                </Button>
-              </Box>
-            </CardContent>
-          </Card>
-        </Fade>
-      </Container>
-    </Box>
+      {/* דיאלוג מחיקת משתמש */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        dir="rtl"
+      >
+        <DialogTitle>
+          מחיקת משתמש
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            האם אתה בטוח שברצונך למחוק את המשתמש <strong>{selectedUser?.username}</strong>?
+            <br />
+            פעולה זו אינה ניתנת לביטול.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)} color="inherit">
+            ביטול
+          </Button>
+          <Button onClick={handleConfirmDelete} color="error" variant="contained">
+            מחק
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* דיאלוג הוספת משתמש */}
+      <Dialog
+        open={addUserDialogOpen}
+        onClose={() => setAddUserDialogOpen(false)}
+        fullWidth
+        maxWidth="sm"
+        dir="rtl"
+      >
+        <DialogTitle>
+          הוספת משתמש חדש
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              label="שם משתמש"
+              fullWidth
+              value={newUser.username}
+              onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
+              required
+            />
+            <TextField
+              label="אימייל"
+              fullWidth
+              type="email"
+              value={newUser.email}
+              onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+              required
+            />
+            <TextField
+              label="סיסמה"
+              fullWidth
+              type="password"
+              value={newUser.password}
+              onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+              required
+            />
+            <FormControl fullWidth>
+              <InputLabel id="new-role-label">תפקיד</InputLabel>
+              <Select
+                labelId="new-role-label"
+                value={newUser.role}
+                label="תפקיד"
+                onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+              >
+                <MenuItem value="admin">מנהל מערכת</MenuItem>
+                <MenuItem value="manager">מנהל</MenuItem>
+                <MenuItem value="typist">מקליד</MenuItem>
+                <MenuItem value="user">משתמש רגיל</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddUserDialogOpen(false)} color="inherit">
+            ביטול
+          </Button>
+          <Button onClick={handleAddUser} color="primary" variant="contained">
+            הוסף משתמש
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* דיאלוג צפייה בקבצי משתמש */}
+      <Dialog
+        open={filesDialogOpen}
+        onClose={() => setFilesDialogOpen(false)}
+        fullWidth
+        maxWidth="md"
+        dir="rtl"
+      >
+        <DialogTitle>
+          קבצים של {selectedUser?.username}
+        </DialogTitle>
+        <DialogContent>
+          {userFilesLoading ? (
+            <Box display="flex" justifyContent="center" my={4}>
+              <CircularProgress />
+            </Box>
+          ) : userFiles.length === 0 ? (
+            <Box textAlign="center" my={4}>
+              <FileIcon sx={{ fontSize: 60, color: 'text.secondary', opacity: 0.5 }} />
+              <Typography variant="h6" color="text.secondary" mt={2}>
+                אין קבצים למשתמש זה
+              </Typography>
+            </Box>
+          ) : (
+            <TableContainer component={Paper} sx={{ mt: 2 }}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell align="right">שם הקובץ</TableCell>
+                    <TableCell align="right">תאריך העלאה</TableCell>
+                    <TableCell align="right">סטטוס</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {userFiles.map((file) => (
+                    <TableRow key={file.id}>
+                      <TableCell align="right">{file.name}</TableCell>
+                      <TableCell align="right">{new Date(file.uploadDate).toLocaleDateString('he-IL')}</TableCell>
+                      <TableCell align="right">
+                        {getFileStatusChip(file.status, file.hasTypedVersion)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setFilesDialogOpen(false)} color="primary">
+            סגור
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* אפקט טעינה */}
+      <Backdrop
+        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+        open={refreshing}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
+    </Container>
   );
 };
 

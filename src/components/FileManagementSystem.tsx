@@ -384,7 +384,7 @@ export default function FileManagementSystem() {
     try {
       setLoading(true)
       // בחירת נקודת הקצה המתאימה בהתאם לסוג הקובץ (מקורי או מוקלד)
-      const endpoint = isTypedVersion ? `${API_URL}/download-typed/${fileId}` : `${API_URL}/download/${fileId}`
+      const endpoint = isTypedVersion ? `${API_URL}/download-type/${fileId}` : `${API_URL}/download/${fileId}`
 
       const response = await fetch(endpoint, {
         headers: { Authorization: `Bearer ${token}` },
