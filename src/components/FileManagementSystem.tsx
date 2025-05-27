@@ -325,9 +325,15 @@ export default function FileManagementSystem() {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
+      
       })
+         const a = await fetch(`${API_URL}/start-typing`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        })
 
-      if (!res.ok) {
+      if (!res.ok||!a.ok) {
         throw new Error("שגיאה בהעלאת הקובץ המוקלד")
       }
 

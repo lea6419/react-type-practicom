@@ -5,12 +5,13 @@ import axios from 'axios';
 import { SetStateAction, useEffect, useState } from 'react';
 import Dashboard from './components/Dashboard';
 import AppLayout from './components/Layout';
-import FileManagementSystem from './components/FileManagementSystem';
+
 import UserManagement from './components/UserManagement';
 import StatsDashboard from './components/StatsDashboard';
 import Login from './pages/Login';
 import SettingsPage from './components/SettingsPage';
 import ActivityLogPage from './components/ActivityLogPage';
+import FileManagementSystem from './components/files/FileManagementSystem';
 // import Profile from './pages/Profile'; // new profile page
 
 function App() {
