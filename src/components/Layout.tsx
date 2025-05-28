@@ -57,7 +57,7 @@ function AppLayout({ onLogout}: { onLogout: any} ) {
 
   // const handleProfileMenuOpen = (event: { currentTarget: SetStateAction<null>; }) => setAnchorEl(event.currentTarget);
   const handleProfileMenuClose = () => setAnchorEl(null);
-  const handleProfileMenuOpen = (event: React.MouseEvent) => setAnchorEl(event.currentTarget);
+  const handleProfileMenuOpen = (event: React.MouseEvent) => setAnchorEl(null);
   const menuItems = [
     { text: 'דשבורד', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'ניהול קבצים', icon: <FileIcon />, path: '/files' },
@@ -141,7 +141,6 @@ function AppLayout({ onLogout}: { onLogout: any} ) {
           <List>
             {menuItems.map(item => (
               <ListItem
-                button
                 key={item.text}
                 onClick={() => { navigate(item.path); if (isMobile) setDrawerOpen(false); }}
                 sx={{

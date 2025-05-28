@@ -126,22 +126,22 @@ export default function StatsDashboard() {
       </Typography>
 
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
+      <Grid component="div" container spacing={3} sx={{ mb: 4 }}>
           <StatCard label="סה״כ משתמשים" value={stats.totalUsers || 0} loading={loading} />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid component="div" container spacing={3} sx={{ mb: 4 }}>
           <StatCard label="קלדניות" value={stats.typistsCount || 0} loading={loading} />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid component="div" container spacing={3} sx={{ mb: 4 }}>
           <StatCard label="לקוחות" value={stats.clientsCount || 0} loading={loading} />
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
+        <Grid component="div" container spacing={3} sx={{ mb: 4 }}>
           <StatCard label="סה״כ קבצים" value={stats.totalFiles || 0} loading={loading} />
         </Grid>
       </Grid>
 
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
+      <Grid component="div" container spacing={3} sx={{ mb: 4 }}>
           <Card sx={{ p: 3, height: "100%", boxShadow: 2, borderRadius: 2 }}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: "bold", textAlign: "center" }}>
               התפלגות סטטוס קבצים
@@ -151,7 +151,7 @@ export default function StatsDashboard() {
             </Box>
           </Card>
         </Grid>
-        <Grid item xs={12} md={6}>
+        <Grid component="div" container spacing={3} sx={{ mb: 4 }}>
           <Card sx={{ p: 3, height: "100%", boxShadow: 2, borderRadius: 2 }}>
             <Typography variant="h6" sx={{ mb: 2, fontWeight: "bold", textAlign: "center" }}>
               משתמשים לפי סוג

@@ -1,7 +1,6 @@
 import React from "react"
 import { Box, Grid, Paper, Typography } from "@mui/material"
-import { FileStatus } from "../FileManagementSystem";
-
+import { FileStatus } from "../../typs/FileType";
 
 interface StatusCardsProps {
   statusCounts: Record<number, number>
@@ -37,20 +36,19 @@ const StatusCards: React.FC<StatusCardsProps> = ({ statusCounts, statusLabels })
                   transition: "all 0.3s ease",
                   "&:hover": {
                     transform: "translateY(-2px)",
-                    boxShadow: `0 4px 12px ${getStatusColor(statusInfo.color)}30`,
                   },
                 }}
               >
-                <Typography 
-                  variant="body2" 
-                  color="text.secondary" 
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
                   sx={{ fontSize: "0.85rem", mb: 1 }}
                 >
                   {statusInfo.label}
                 </Typography>
-                <Typography 
-                  variant="h5" 
-                  fontWeight="bold" 
+                <Typography
+                  variant="h5"
+                  fontWeight="bold"
                   sx={{ color: getStatusColor(statusInfo.color) }}
                 >
                   {count}

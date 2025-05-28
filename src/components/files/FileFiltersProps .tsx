@@ -12,7 +12,8 @@ import {
   Button,
 } from "@mui/material"
 import { Search as SearchIcon, Refresh as RefreshIcon } from "@mui/icons-material"
-import { User } from "../types/fileTypes"
+import { User } from "../../typs/FileType"
+
 
 interface FileFiltersProps {
   searchTerm: string
@@ -34,7 +35,7 @@ const FileFilters: React.FC<FileFiltersProps> = ({
   return (
     <Box sx={{ mb: 3 }}>
       <Grid container spacing={2} alignItems="center">
-        <Grid item xs={12} sm={4}>
+      <Grid component="div" container spacing={2} alignItems="center">
           <TextField
             fullWidth
             label="חיפוש קבצים"
@@ -60,7 +61,7 @@ const FileFilters: React.FC<FileFiltersProps> = ({
           />
         </Grid>
         
-        <Grid item xs={12} sm={4}>
+        <Grid component="div" container spacing={2} alignItems="center">
           <FormControl fullWidth size="small">
             <InputLabel id="user-filter-label" sx={{ right: 14, left: "auto" }}>
               סנן לפי משתמש
@@ -82,7 +83,7 @@ const FileFilters: React.FC<FileFiltersProps> = ({
           </FormControl>
         </Grid>
         
-        <Grid item xs={12} sm={4}>
+        <Grid component="div" container spacing={2} alignItems="center">
           <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
             <Button 
               variant="outlined" 

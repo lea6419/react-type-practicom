@@ -103,7 +103,8 @@ export const useFileManagement = () => {
           hasTypedVersion,
         }
       })
-
+      
+     
       const sortedFiles = [...processedFiles].sort((a, b) => (a.status || 0) - (b.status || 0))
       setFiles(sortedFiles)
       setFilteredFiles(sortedFiles)
@@ -151,7 +152,7 @@ export const useFileManagement = () => {
     fetchUsers()
   }, [])
 
-  const handleUploadTypedFile = async (originalFileId: string, typedFile: File, fileId: number) => {
+  const handleUploadTypedFile = async (originalFileId: string, typedFile: File, fileId:number) => {
     const token = localStorage.getItem("token")
     if (!token) {
       showMessage("אין הרשאת גישה, יש להתחבר מחדש", "error")
@@ -170,7 +171,7 @@ export const useFileManagement = () => {
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
       })
-
+       Completed(fileId.toString())
       if (!res.ok) {
         throw new Error("שגיאה בהעלאת הקובץ המוקלד")
       }
@@ -258,7 +259,9 @@ export const useFileManagement = () => {
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
-
+      if(!isTypedVersion){
+         startTypye(fileId);
+      }
       showMessage(`הקובץ ${isTypedVersion ? "המוקלד" : "המקורי"} הורד בהצלחה`, "success")
     } catch (error) {
       console.error(`שגיאה בהורדת הקובץ ${isTypedVersion ? "המוקלד" : "המקורי"}:`, error)
@@ -382,3 +385,32 @@ export const useFileManagement = () => {
     handleRefreshFiles,
   }
 }
+
+
+async function startTypye(fileId: string) {
+  try{
+    const a=await fetch(`${API_URL}/start-typing/${fileId}`,{
+    method: "POST",
+   } )
+   if(!a.ok)
+    throw new Error(" בעיה בסטטוס")
+  }
+  catch(error){
+    console.error("שגיאה בשינוי סטטוס" +error)
+  }
+  
+}
+async function Completed(fileId: string) {
+  try{
+    const a=await fetch(`${API_URL}/Completed/${fileId}`,{
+    method: "POST",
+   } )
+   if(!a.ok)
+    throw new Error(" בעיה בסטטוס")
+  }
+  catch(error){
+    console.error("שגיאה בשינוי סטטוס" +error)
+  }
+  
+}
+

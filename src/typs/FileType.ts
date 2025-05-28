@@ -15,7 +15,7 @@ export enum FileStatus {
     [FileStatus.ReturnedToUser]: { label: "הוחזר למשתמש", color: "primary" },
     [FileStatus.SoftDeleted]: { label: "נמחק", color: "error" },
   }
-  
+   
   export interface User {
     id: string
     name: string

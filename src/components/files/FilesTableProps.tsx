@@ -1,6 +1,7 @@
 import React from "react"
 import { Box, Grid, Paper, Typography } from "@mui/material"
-import { FileStatus } from "../FileManagementSystem";
+import { FileStatus } from "../../typs/FileType";
+
 
 interface StatusCardsProps {
   statusCounts: Record<number, number>
@@ -25,7 +26,7 @@ const StatusCards: React.FC<StatusCardsProps> = ({ statusCounts, statusLabels })
         {Object.entries(statusLabels).map(([statusKey, statusInfo]) => {
           const count = statusCounts[Number(statusKey)] || 0
           return (
-            <Grid item xs={6} sm={4} md={2.4} key={statusKey}>
+            <Grid component="div" container spacing={2} alignItems="center">
               <Paper
                 sx={{
                   p: 2,
