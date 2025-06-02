@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import {
   Container,
@@ -6,7 +6,7 @@ import {
   CardContent,
   Typography,
   Button,
-  Grid,
+
   CircularProgress,
   Box,
   Snackbar,
@@ -27,7 +27,6 @@ import {
   Chip,
   Alert,
   Tooltip,
-  Fade,
   TableContainer,
   Table,
   TableHead,
@@ -40,7 +39,6 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
   Visibility as VisibilityIcon,
-  Close as CloseIcon,
   PersonAdd as PersonAddIcon,
   Refresh as RefreshIcon,
   FileCopy as FileIcon,
@@ -257,7 +255,7 @@ const UserManagement = () => {
   }, []);
 
   // פונקציה להצגת סטטוס קובץ
-  const getFileStatusChip = (status: number, hasTypedVersion: boolean) => {
+  const getFileStatusChip = (status: number, _hasTypedVersion: boolean) => {
     switch (status) {
       case 0:
         return <Chip size="small" label="ממתין להקלדה" color="warning" />;
@@ -358,89 +356,89 @@ const UserManagement = () => {
               <Typography variant="h6">לא נמצאו משתמשים</Typography>
             </Paper>
           ) : (
-            <Grid container spacing={3}>
-              {users.map((user) => (
-                <Grid item xs={12} sm={6} md={4} key={user.id}>
-                  <Card 
-                    elevation={3} 
-                    sx={{ 
-                      borderRadius: 2,
-                      transition: 'transform 0.2s, box-shadow 0.2s',
-                      '&:hover': {
-                        transform: 'translateY(-5px)',
-                        boxShadow: 6
-                      }
-                    }}
-                  >
-                    <CardContent>
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        <Avatar 
-                          sx={{ 
-                            bgcolor: getRoleColor(user.role), 
-                            width: 50, 
-                            height: 50,
-                            mr: 2
-                          }}
-                        >
-                          {getInitial(user.username)}
-                        </Avatar>
-                        <Box>
-                          <Typography variant="h6" fontWeight="bold">
-                            {user.username}
-                          </Typography>
-                          <Typography color="text.secondary" variant="body2">
-                            {user.email}
-                          </Typography>
-                        </Box>
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-around' }}>
+            {users.map((user) => (
+              <div key={user.id} style={{ flexBasis: 'calc(33.33% - 16px)', maxWidth: 'calc(33.33% - 16px)', padding: '16px' }}>
+                <Card 
+                  elevation={3} 
+                  sx={{ 
+                    borderRadius: 2,
+                    transition: 'transform 0.2s, box-shadow 0.2s',
+                    '&:hover': {
+                      transform: 'translateY(-5px)',
+                      boxShadow: 6
+                    }
+                  }}
+                >
+                  <CardContent>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Avatar 
+                        sx={{ 
+                          bgcolor: getRoleColor(user.role), 
+                          width: 50, 
+                          height: 50,
+                          mr: 2
+                        }}
+                      >
+                        {getInitial(user.username)}
+                      </Avatar>
+                      <Box>
+                        <Typography variant="h6" fontWeight="bold">
+                          {user.username}
+                        </Typography>
+                        <Typography color="text.secondary" variant="body2">
+                          {user.email}
+                        </Typography>
                       </Box>
+                    </Box>
+                    
+                    <Divider sx={{ my: 1.5 }} />
+                    
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Chip 
+                        label={user.role} 
+                        color={getRoleColor(user.role) as any}
+                        size="small"
+                        icon={<PersonIcon />}
+                      />
                       
-                      <Divider sx={{ my: 1.5 }} />
-                      
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Chip 
-                          label={user.role} 
-                          color={getRoleColor(user.role) as any}
-                          size="small"
-                          icon={<PersonIcon />}
-                        />
+                      <Box>
+                        <Tooltip title="ערוך משתמש" arrow>
+                          <IconButton 
+                            size="small" 
+                            color="primary"
+                            onClick={() => handleEditClick(user)}
+                          >
+                            <EditIcon />
+                          </IconButton>
+                        </Tooltip>
                         
-                        <Box>
-                          <Tooltip title="ערוך משתמש" arrow>
-                            <IconButton 
-                              size="small" 
-                              color="primary"
-                              onClick={() => handleEditClick(user)}
-                            >
-                              <EditIcon />
-                            </IconButton>
-                          </Tooltip>
-                          
-                          <Tooltip title="מחק משתמש" arrow>
-                            <IconButton 
-                              size="small" 
-                              color="error"
-                              onClick={() => handleDeleteClick(user)}
-                            >
-                              <DeleteIcon />
-                            </IconButton>
-                          </Tooltip>
-                          
-                          <Tooltip title="צפה בקבצים" arrow>
-                            <IconButton 
-                              size="small" 
-                              color="info"
-                              onClick={() => handleViewFiles(user)}
-                            >
-                              <VisibilityIcon />
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
+                        <Tooltip title="מחק משתמש" arrow>
+                          <IconButton 
+                            size="small" 
+                            color="error"
+                            onClick={() => handleDeleteClick(user)}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
+                        
+                        <Tooltip title="צפה בקבצים" arrow>
+                          <IconButton 
+                            size="small" 
+                            color="info"
+                            onClick={() => handleViewFiles(user)}
+                          >
+                            <VisibilityIcon />
+                          </IconButton>
+                        </Tooltip>
                       </Box>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </div>
+            ))}
+          </div>
           )}
         </>
       )}

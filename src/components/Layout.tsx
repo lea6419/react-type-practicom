@@ -33,7 +33,7 @@ import {
   Settings as SettingsIcon,
   ChevronLeft as ChevronLeftIcon
 } from "@mui/icons-material";
-import { SetStateAction, useState } from "react";
+import {  useState } from "react";
 
 const drawerWidth = 240;
 
@@ -57,7 +57,7 @@ function AppLayout({ onLogout}: { onLogout: any} ) {
 
   // const handleProfileMenuOpen = (event: { currentTarget: SetStateAction<null>; }) => setAnchorEl(event.currentTarget);
   const handleProfileMenuClose = () => setAnchorEl(null);
-  const handleProfileMenuOpen = (event: React.MouseEvent) => setAnchorEl(null);
+  const handleProfileMenuOpen = () => setAnchorEl(null);
   const menuItems = [
     { text: 'דשבורד', icon: <DashboardIcon />, path: '/dashboard' },
     { text: 'ניהול קבצים', icon: <FileIcon />, path: '/files' },

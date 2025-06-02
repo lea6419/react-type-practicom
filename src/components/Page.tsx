@@ -63,7 +63,7 @@ export default function AboutPage() {
               { icon: <BarChartIcon fontSize="large" color="primary" />, label: "ניתוח ביצועים מתקדם" },
               { icon: <AccessTimeIcon fontSize="large" color="primary" />, label: "מעקב זמן אמת" },
               { icon: <EmojiEventsIcon fontSize="large" color="primary" />, label: "תחרויות והישגים" },
-            ].map((item, index) => (
+            ].map((item) => (
               <Grid container spacing={6} alignItems="center" mb={8}>
                 <Paper elevation={3} sx={{ p: 3, textAlign: "center", borderRadius: 3, height: "100%" }}>
                   {item.icon}
@@ -88,7 +88,7 @@ export default function AboutPage() {
                 { value: "5M+", label: "תרגילי הקלדה הושלמו" },
                 { value: "30%", label: "שיפור ממוצע במהירות" },
                 { value: "4.8", label: "דירוג ממוצע בחנויות" },
-              ].map((stat, index) => (
+              ].map((stat) => (
                 <Grid container spacing={6} alignItems="center" mb={8}>
                   <Typography variant="h4" color="primary" fontWeight="bold">
                     {stat.value}
@@ -124,7 +124,7 @@ export default function AboutPage() {
                 role: "ראש צוות פיתוח",
                 bio: "מפתח Full Stack עם התמחות בטכנולוגיות React ו-Node.js, מוביל את הפיתוח הטכני.",
               },
-            ].map((member, index) => (
+            ].map((member) => (
               <Grid container spacing={6} alignItems="center" mb={8}>
                 <Paper elevation={3} sx={{ p: 4, borderRadius: 3, height: "100%" }}>
                   <Typography variant="h6" fontWeight="bold">
@@ -161,7 +161,7 @@ export default function AboutPage() {
                 quote: "הניתוחים המפורטים והמשוב בזמן אמת עזרו לי להבין בדיוק איפה אני צריך להשתפר.",
                 author: "נועה ק., סטודנטית",
               },
-            ].map((testimonial, index) => (
+            ].map((testimonial) => (
               <Grid container spacing={6} alignItems="center" mb={8}>
                 <Paper elevation={3} sx={{ p: 4, borderRadius: 3, height: "100%" }}>
                   <Typography variant="body1" paragraph sx={{ fontStyle: "italic", mb: 2 }}>

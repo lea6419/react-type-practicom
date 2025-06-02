@@ -1,4 +1,4 @@
-import { Card, Title, Text, Switch, Divider, Stack } from '@mantine/core';
+import { Card, Title, Switch, Divider, Stack } from '@mantine/core';
 import { useState } from 'react';
 
 const SettingsPage = () => {

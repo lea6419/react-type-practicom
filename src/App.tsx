@@ -16,7 +16,7 @@ import FileManagementSystem from './components/files/FileManagementSystem';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState(null);
+  const [, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

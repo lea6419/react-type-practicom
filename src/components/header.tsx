@@ -19,7 +19,6 @@ import {
 import { Link } from "react-router-dom";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
-import KeyboardIcon from "@mui/icons-material/Keyboard";
 
 interface Props {
   window?: () => Window;
